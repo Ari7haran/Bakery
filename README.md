@@ -1,6 +1,6 @@
 # 🥐 Sweet Crumbs Bakery E-Commerce Application
 
-Sweet Crumbs Bakery is an enterprise-grade full-stack e-commerce web platform built with **Python FastAPI** and **React 19 + TypeScript + Vite + Tailwind CSS**.
+Sweet Crumbs Bakery is an enterprise-grade full-stack e-commerce web platform built with **Python FastAPI** and **React + JavaScript + Vite + Tailwind CSS**.
 
 It enables bakery customers to browse freshly baked sourdoughs, custom celebration cakes, and warm snacks, schedule express takeaway pickup time slots, generate QR counter pickup codes, and track live baking timeline status in real-time.
 
@@ -40,13 +40,12 @@ c:\Ariharan\bakery\
 │   └── Dockerfile
 ├── frontend/
 │   ├── src/
-│   │   ├── components/     # Navbar, Footer, ProductCard, CartDrawer, PickupModal
-│   │   ├── context/        # AuthContext, CartContext, ThemeContext
-│   │   ├── pages/          # Home, Shop, ProductDetail, Checkout, Track, Profile, Admin
-│   │   ├── services/       # Axios client & JWT interceptors
-│   │   └── types/          # TypeScript interface definitions
+│   │   ├── components/     # Navbar, Footer, ProductCard, CartDrawer, PickupModal (.jsx)
+│   │   ├── context/        # AuthContext, CartContext, ThemeContext (.jsx)
+│   │   ├── pages/          # Home, Shop, ProductDetail, Checkout, Track, Profile, Admin (.jsx)
+│   │   └── services/       # Axios client & JWT interceptors (.js)
 │   ├── index.css           # Design tokens & Glassmorphism styles
-│   └── vite.config.ts
+│   └── vite.config.js
 ├── docker-compose.yml
 ├── ARCHITECTURE.md
 └── ER_DIAGRAM.md
