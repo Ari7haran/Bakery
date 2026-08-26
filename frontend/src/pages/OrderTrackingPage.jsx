@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { CheckCircle2, Clock, QrCode, ArrowLeft, RefreshCw, Sparkles } from 'lucide-react';
-import { api } from '../services/api';
-import { Order } from '../types';
+import { QrCode, ArrowLeft, RefreshCw } from 'lucide-react';
+import { api } from '../services/api.js';
 
 const statusSteps = [
   { status: 'Received', label: 'Order Received', icon: '📝' },
@@ -13,11 +12,11 @@ const statusSteps = [
   { status: 'Completed', label: 'Collected', icon: '🎉' },
 ];
 
-const OrderTrackingPage: React.FC = () => {
+const OrderTrackingPage = () => {
   const [searchParams] = useSearchParams();
   const orderId = searchParams.get('orderId');
 
-  const [order, setOrder] = useState<Order | null>(null);
+  const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -31,7 +30,7 @@ const OrderTrackingPage: React.FC = () => {
       const res = await api.get(`/orders/${orderId}`);
       setOrder(res.data);
       setError('');
-    } catch (err: any) {
+    } catch (err) {
       setError(err.response?.data?.detail || "Order not found");
     } finally {
       setLoading(false);

@@ -1,51 +1,24 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Product } from '../types';
-import { useAuth } from './AuthContext';
-import { api } from '../services/api';
+import { useAuth } from './AuthContext.jsx';
+import { api } from '../services/api.js';
 
-export interface LocalCartItem {
-  product: Product;
-  quantity: number;
-}
+const CartContext = createContext(undefined);
 
-interface CartContextType {
-  cart: LocalCartItem[];
-  wishlist: Product[];
-  addToCart: (product: Product, quantity?: number) => void;
-  updateQuantity: (productId: number, quantity: number) => void;
-  removeFromCart: (productId: number) => void;
-  clearCart: () => void;
-  toggleWishlist: (product: Product) => void;
-  isInWishlist: (productId: number) => boolean;
-  cartCount: number;
-  totalAmount: number;
-  discountAmount: number;
-  appliedCoupon: { code: string; discountPercent: number; discountAmount: number } | null;
-  applyCoupon: (code: string) => Promise<boolean>;
-  removeCoupon: () => void;
-  isCartOpen: boolean;
-  setIsCartOpen: (open: boolean) => void;
-  pickupSlot: { date: string; time: string } | null;
-  setPickupSlot: (slot: { date: string; time: string } | null) => void;
-}
-
-const CartContext = createContext<CartContextType | undefined>(undefined);
-
-export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const CartProvider = ({ children }) => {
   const { user } = useAuth();
-  const [cart, setCart] = useState<LocalCartItem[]>(() => {
+  const [cart, setCart] = useState(() => {
     const saved = localStorage.getItem('sweet_crumbs_cart');
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [wishlist, setWishlist] = useState<Product[]>(() => {
+  const [wishlist, setWishlist] = useState(() => {
     const saved = localStorage.getItem('sweet_crumbs_wishlist');
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountPercent: number; discountAmount: number } | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [pickupSlot, setPickupSlot] = useState<{ date: string; time: string } | null>({
+  const [pickupSlot, setPickupSlot] = useState({
     date: 'Today',
     time: '04:00 PM - 04:30 PM'
   });
@@ -58,7 +31,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('sweet_crumbs_wishlist', JSON.stringify(wishlist));
   }, [wishlist]);
 
-  const addToCart = (product: Product, quantity = 1) => {
+  const addToCart = (product, quantity = 1) => {
     setCart((prev) => {
       const existingIndex = prev.findIndex((item) => item.product.id === product.id);
       if (existingIndex > -1) {
@@ -71,7 +44,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsCartOpen(true);
   };
 
-  const updateQuantity = (productId: number, quantity: number) => {
+  const updateQuantity = (productId, quantity) => {
     if (quantity <= 0) {
       removeFromCart(productId);
       return;
@@ -83,7 +56,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   };
 
-  const removeFromCart = (productId: number) => {
+  const removeFromCart = (productId) => {
     setCart((prev) => prev.filter((item) => item.product.id !== productId));
   };
 
@@ -92,7 +65,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAppliedCoupon(null);
   };
 
-  const toggleWishlist = (product: Product) => {
+  const toggleWishlist = (product) => {
     setWishlist((prev) => {
       const exists = prev.some((p) => p.id === product.id);
       if (exists) {
@@ -102,7 +75,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  const isInWishlist = (productId: number) => {
+  const isInWishlist = (productId) => {
     return wishlist.some((p) => p.id === productId);
   };
 
@@ -113,7 +86,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return acc + itemPrice * item.quantity;
   }, 0);
 
-  const applyCoupon = async (code: string): Promise<boolean> => {
+  const applyCoupon = async (code) => {
     try {
       const res = await api.post('/user/coupon/validate', {
         code,

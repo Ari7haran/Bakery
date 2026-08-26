@@ -1,21 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User } from '../types';
-import { api } from '../services/api';
+import { api } from '../services/api.js';
 
-interface AuthContextType {
-  user: User | null;
-  token: string | null;
-  login: (token: string, user: User) => void;
-  logout: () => void;
-  updateUser: (user: User) => void;
-  isLoading: boolean;
-}
+const AuthContext = createContext(undefined);
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('sweet_crumbs_token'));
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('sweet_crumbs_token'));
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -33,7 +23,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchMe();
   }, [token]);
 
-  const login = (newToken: string, newUser: User) => {
+  const login = (newToken, newUser) => {
     localStorage.setItem('sweet_crumbs_token', newToken);
     setToken(newToken);
     setUser(newUser);
@@ -45,7 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
   };
 
-  const updateUser = (updatedUser: User) => {
+  const updateUser = (updatedUser) => {
     setUser(updatedUser);
   };
 

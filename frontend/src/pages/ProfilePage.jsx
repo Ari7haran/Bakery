@@ -1,19 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { User as UserIcon, ShoppingBag, Heart, Award, MapPin, QrCode, ExternalLink } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { useCart } from '../context/CartContext';
-import { api } from '../services/api';
-import { Order } from '../types';
-import ProductCard from '../components/ProductCard';
+import { ShoppingBag, Heart, Award, QrCode } from 'lucide-react';
+import { useAuth } from '../context/AuthContext.jsx';
+import { useCart } from '../context/CartContext.jsx';
+import { api } from '../services/api.js';
+import ProductCard from '../components/ProductCard.jsx';
 
-const ProfilePage: React.FC = () => {
+const ProfilePage = () => {
   const { user } = useAuth();
   const { wishlist } = useCart();
   const [searchParams] = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState<string>(searchParams.get('tab') || 'orders');
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'orders');
+  const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
 
   useEffect(() => {

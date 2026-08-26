@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Lock, Mail, User as UserIcon, Phone, ArrowRight } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { api } from '../services/api';
+import { useAuth } from '../context/AuthContext.jsx';
+import { api } from '../services/api.js';
 
-const RegisterPage: React.FC = () => {
+const RegisterPage = () => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,7 +15,7 @@ const RegisterPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
@@ -29,7 +29,7 @@ const RegisterPage: React.FC = () => {
       });
       login(res.data.access_token, res.data.user);
       navigate('/');
-    } catch (err: any) {
+    } catch (err) {
       setError(err.response?.data?.detail || "Registration failed. Try a different email.");
     } finally {
       setLoading(false);

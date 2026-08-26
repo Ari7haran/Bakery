@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, Clock, MapPin, CreditCard, QrCode, CheckCircle2, ShieldCheck, Tag } from 'lucide-react';
-import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
-import { api } from '../services/api';
-import PickupModal from '../components/PickupModal';
+import { Clock, CreditCard, QrCode, CheckCircle2 } from 'lucide-react';
+import { useCart } from '../context/CartContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
+import { api } from '../services/api.js';
+import PickupModal from '../components/PickupModal.jsx';
 
-const CheckoutPage: React.FC = () => {
+const CheckoutPage = () => {
   const { cart, totalAmount, discountAmount, appliedCoupon, pickupSlot, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [orderType, setOrderType] = useState<'Takeaway Pickup' | 'Delivery'>('Takeaway Pickup');
-  const [paymentMethod, setPaymentMethod] = useState<'Cash on Pickup' | 'Online Payment'>('Cash on Pickup');
+  const [orderType, setOrderType] = useState('Takeaway Pickup');
+  const [paymentMethod, setPaymentMethod] = useState('Cash on Pickup');
   const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
   
   // Customer details form
@@ -25,7 +25,7 @@ const CheckoutPage: React.FC = () => {
 
   const finalTotal = Math.max(0, totalAmount - discountAmount);
 
-  const handlePlaceOrder = async (e: React.FormEvent) => {
+  const handlePlaceOrder = async (e) => {
     e.preventDefault();
     if (cart.length === 0) return;
 
@@ -44,7 +44,7 @@ const CheckoutPage: React.FC = () => {
       const res = await api.post('/orders/', payload);
       clearCart();
       navigate(`/track?orderId=${res.data.id}`);
-    } catch (err: any) {
+    } catch (err) {
       alert(err.response?.data?.detail || "Failed to place order. Please try again.");
     } finally {
       setLoading(false);

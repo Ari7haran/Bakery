@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Phone, Mail, Clock, Instagram, Facebook, Twitter, Send, Award, ShieldCheck, Heart } from 'lucide-react';
+import { MapPin, Phone, Clock, Instagram, Facebook, Twitter, Send, Award, ShieldCheck } from 'lucide-react';
 
-const Footer: React.FC = () => {
+const Footer = () => {
   return (
     <footer className="bg-bakery-dark text-cream-100 border-t border-amber-900/30 pt-16 pb-8 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

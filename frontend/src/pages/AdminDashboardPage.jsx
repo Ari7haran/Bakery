@@ -7,37 +7,29 @@ import {
   TrendingUp,
   Plus,
   Trash2,
-  Edit,
-  CheckCircle2,
-  Clock,
-  Package,
-  LayoutDashboard,
-  ShieldCheck,
-  RefreshCw
+  ShieldCheck
 } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
-import { api } from '../services/api';
-import { useAuth } from '../context/AuthContext';
-import { AnalyticsData, Order, Product, Category } from '../types';
+import { api } from '../services/api.js';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const COLORS = ['#8B4513', '#E07A5F', '#D4AF37', '#2C1810', '#3D1C10'];
 
-const AdminDashboardPage: React.FC = () => {
+const AdminDashboardPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [activeTab, setActiveTab] = useState<'analytics' | 'orders' | 'products'>('analytics');
-  const [loading, setLoading] = useState(true);
+  const [analytics, setAnalytics] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [activeTab, setActiveTab] = useState('analytics');
 
   // New Product Modal Form State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newProdName, setNewProdName] = useState('');
-  const [newProdCategory, setNewProdCategory] = useState<number>(1);
-  const [newProdPrice, setNewProdPrice] = useState<number>(200);
+  const [newProdCategory, setNewProdCategory] = useState(1);
+  const [newProdPrice, setNewProdPrice] = useState(200);
   const [newProdDesc, setNewProdDesc] = useState('');
   const [newProdImage, setNewProdImage] = useState('https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&auto=format&fit=crop&q=80');
 
@@ -47,7 +39,6 @@ const AdminDashboardPage: React.FC = () => {
     }
 
     const fetchAdminData = async () => {
-      setLoading(true);
       try {
         const [anRes, ordRes, prodRes, catRes] = await Promise.all([
           api.get('/admin/analytics'),
@@ -62,8 +53,6 @@ const AdminDashboardPage: React.FC = () => {
         if (catRes.data.length > 0) setNewProdCategory(catRes.data[0].id);
       } catch (err) {
         console.error("Failed to load admin analytics", err);
-      } finally {
-        setLoading(false);
       }
     };
     fetchAdminData();
@@ -81,7 +70,7 @@ const AdminDashboardPage: React.FC = () => {
     );
   }
 
-  const handleUpdateOrderStatus = async (orderId: number, status: string) => {
+  const handleUpdateOrderStatus = async (orderId, status) => {
     try {
       const res = await api.put(`/admin/orders/${orderId}/status`, { status });
       setOrders(orders.map(o => o.id === orderId ? res.data : o));
@@ -90,7 +79,7 @@ const AdminDashboardPage: React.FC = () => {
     }
   };
 
-  const handleCreateProduct = async (e: React.FormEvent) => {
+  const handleCreateProduct = async (e) => {
     e.preventDefault();
     try {
       const payload = {
@@ -118,7 +107,7 @@ const AdminDashboardPage: React.FC = () => {
     }
   };
 
-  const handleDeleteProduct = async (prodId: number) => {
+  const handleDeleteProduct = async (prodId) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try {
       await api.delete(`/admin/products/${prodId}`);

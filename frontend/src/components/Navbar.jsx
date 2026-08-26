@@ -15,12 +15,12 @@ import {
   Sparkles,
   LayoutDashboard
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { useCart } from '../context/CartContext';
-import { useTheme } from '../context/ThemeContext';
-import PickupModal from './PickupModal';
+import { useAuth } from '../context/AuthContext.jsx';
+import { useCart } from '../context/CartContext.jsx';
+import { useTheme } from '../context/ThemeContext.jsx';
+import PickupModal from './PickupModal.jsx';
 
-const Navbar: React.FC = () => {
+const Navbar = () => {
   const { user, logout } = useAuth();
   const { cartCount, wishlist, setIsCartOpen, pickupSlot } = useCart();
   const { isDarkMode, toggleTheme } = useTheme();
@@ -32,7 +32,7 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/shop?search=${encodeURIComponent(searchQuery)}`);

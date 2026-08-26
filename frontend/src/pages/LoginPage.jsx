@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Lock, Mail, ArrowRight, Sparkles } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { api } from '../services/api';
+import { Lock, Mail, ArrowRight } from 'lucide-react';
+import { useAuth } from '../context/AuthContext.jsx';
+import { api } from '../services/api.js';
 
-const LoginPage: React.FC = () => {
+const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -13,7 +13,7 @@ const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
@@ -26,7 +26,7 @@ const LoginPage: React.FC = () => {
       } else {
         navigate('/');
       }
-    } catch (err: any) {
+    } catch (err) {
       setError(err.response?.data?.detail || "Invalid email or password.");
     } finally {
       setLoading(false);

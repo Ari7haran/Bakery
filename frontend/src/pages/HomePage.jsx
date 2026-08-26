@@ -7,17 +7,12 @@ import {
   Star,
   Award,
   Clock,
-  CheckCircle2,
   ChevronRight,
   ShieldCheck,
-  Coffee,
-  Heart,
-  Quote,
   Instagram
 } from 'lucide-react';
-import { api } from '../services/api';
-import { Product, Category } from '../types';
-import ProductCard from '../components/ProductCard';
+import { api } from '../services/api.js';
+import ProductCard from '../components/ProductCard.jsx';
 
 const mockBanners = [
   {
@@ -76,10 +71,10 @@ const faqs = [
   { q: "Can I customize birthday cakes?", a: "Yes, you can order custom flavor combinations and write custom messages during checkout notes or call our master chef directly." }
 ];
 
-const HomePage: React.FC = () => {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [todaysFresh, setTodaysFresh] = useState<Product[]>([]);
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+const HomePage = () => {
+  const [categories, setCategories] = useState([]);
+  const [todaysFresh, setTodaysFresh] = useState([]);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
   const [activeBanner, setActiveBanner] = useState(0);
 
   useEffect(() => {
@@ -91,7 +86,7 @@ const HomePage: React.FC = () => {
         ]);
         setCategories(catRes.data);
 
-        const prods: Product[] = prodRes.data;
+        const prods = prodRes.data;
         setTodaysFresh(prods.filter(p => p.is_todays_fresh).slice(0, 4));
         setFeaturedProducts(prods.filter(p => p.is_featured).slice(0, 8));
       } catch (err) {
@@ -334,7 +329,7 @@ const HomePage: React.FC = () => {
 
       {/* Customer Reviews Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="text-center max-w-md mx-auto space-y-2">
+        <div className="text-center max-md mx-auto space-y-2">
           <span className="text-bakery-orange font-extrabold text-xs uppercase tracking-widest">
             Loved By Thousands
           </span>

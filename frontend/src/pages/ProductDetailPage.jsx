@@ -1,20 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Star, Heart, Plus, Minus, Clock, ShieldCheck, ShoppingBag, Sparkles, ChevronRight, Award } from 'lucide-react';
-import { api } from '../services/api';
-import { Product, Review } from '../types';
-import { useCart } from '../context/CartContext';
-import ProductCard from '../components/ProductCard';
+import { api } from '../services/api.js';
+import { useCart } from '../context/CartContext.jsx';
+import ProductCard from '../components/ProductCard.jsx';
 
-const ProductDetailPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+const ProductDetailPage = () => {
+  const { id } = useParams();
   const { addToCart, toggleWishlist, isInWishlist } = useCart();
 
-  const [product, setProduct] = useState<Product | null>(null);
-  const [recommendations, setRecommendations] = useState<Product[]>([]);
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const [product, setProduct] = useState(null);
+  const [recommendations, setRecommendations] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState<'description' | 'ingredients' | 'nutrition' | 'reviews'>('description');
+  const [activeTab, setActiveTab] = useState('description');
   
   // Review submission
   const [newRating, setNewRating] = useState(5);
@@ -51,7 +50,7 @@ const ProductDetailPage: React.FC = () => {
   const inWishlist = isInWishlist(product.id);
   const displayPrice = product.discount_price || product.price;
 
-  const handleReviewSubmit = async (e: React.FormEvent) => {
+  const handleReviewSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
     setSubmittingReview(true);
@@ -193,7 +192,7 @@ const ProductDetailPage: React.FC = () => {
       {/* Tabs: Description, Ingredients, Nutrition, Reviews */}
       <div className="bg-white dark:bg-bakery-chocolate/60 rounded-3xl p-6 border border-amber-900/10 dark:border-amber-500/20 shadow-md">
         <div className="flex border-b border-amber-900/10 gap-6 overflow-x-auto">
-          {(['description', 'ingredients', 'nutrition', 'reviews'] as const).map((tab) => (
+          {['description', 'ingredients', 'nutrition', 'reviews'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}

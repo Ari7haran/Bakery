@@ -1,11 +1,6 @@
 import React, { useState } from 'react';
 import { X, Calendar, Clock, CheckCircle2 } from 'lucide-react';
-import { useCart } from '../context/CartContext';
-
-interface PickupModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+import { useCart } from '../context/CartContext.jsx';
 
 const dates = ['Today', 'Tomorrow', 'Day After'];
 const slots = [
@@ -18,7 +13,7 @@ const slots = [
   '07:30 PM - 08:00 PM'
 ];
 
-const PickupModal: React.FC<PickupModalProps> = ({ isOpen, onClose }) => {
+const PickupModal = ({ isOpen, onClose }) => {
   const { pickupSlot, setPickupSlot } = useCart();
   const [selectedDate, setSelectedDate] = useState(pickupSlot?.date || 'Today');
   const [selectedSlot, setSelectedSlot] = useState(pickupSlot?.time || '04:00 PM - 04:30 PM');

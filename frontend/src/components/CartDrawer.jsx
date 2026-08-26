@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { X, Trash2, Plus, Minus, Tag, Clock, ArrowRight, ShoppingBag, Sparkles } from 'lucide-react';
-import { useCart } from '../context/CartContext';
+import { X, Trash2, Plus, Minus, Tag, Clock, ArrowRight, ShoppingBag } from 'lucide-react';
+import { useCart } from '../context/CartContext.jsx';
 
-const CartDrawer: React.FC = () => {
+const CartDrawer = () => {
   const {
     cart,
     updateQuantity,
@@ -25,7 +25,7 @@ const CartDrawer: React.FC = () => {
 
   const finalTotal = Math.max(0, totalAmount - discountAmount);
 
-  const handleApplyCoupon = async (e: React.FormEvent) => {
+  const handleApplyCoupon = async (e) => {
     e.preventDefault();
     setCouponError('');
     if (!couponCode.trim()) return;

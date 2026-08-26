@@ -1,14 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Star, Heart, Plus, Clock, Flame } from 'lucide-react';
-import { Product } from '../types';
-import { useCart } from '../context/CartContext';
+import { useCart } from '../context/CartContext.jsx';
 
-interface ProductCardProps {
-  product: Product;
-}
-
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCard = ({ product }) => {
   const { addToCart, toggleWishlist, isInWishlist } = useCart();
   const inWishlist = isInWishlist(product.id);
 

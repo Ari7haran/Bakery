@@ -1,23 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, Filter, SlidersHorizontal, ArrowUpDown, X } from 'lucide-react';
-import { api } from '../services/api';
-import { Product, Category } from '../types';
-import ProductCard from '../components/ProductCard';
+import { Search, Filter, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
+import { api } from '../services/api.js';
+import ProductCard from '../components/ProductCard.jsx';
 
-const ShopPage: React.FC = () => {
+const ShopPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Filters state
   const selectedCategory = searchParams.get('category') || 'all';
   const searchQuery = searchParams.get('search') || '';
-  const [isVegOnly, setIsVegOnly] = useState<boolean>(false);
-  const [maxPrice, setMaxPrice] = useState<number>(1500);
-  const [sortBy, setSortBy] = useState<string>('popular');
+  const [isVegOnly, setIsVegOnly] = useState(false);
+  const [maxPrice, setMaxPrice] = useState(1500);
+  const [sortBy, setSortBy] = useState('popular');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   useEffect(() => {
@@ -39,7 +38,7 @@ const ShopPage: React.FC = () => {
     fetchShopData();
   }, [selectedCategory, searchQuery, sortBy]);
 
-  const handleCategoryChange = (slug: string) => {
+  const handleCategoryChange = (slug) => {
     const params = new URLSearchParams(searchParams);
     if (slug === 'all') {
       params.delete('category');
@@ -47,10 +46,6 @@ const ShopPage: React.FC = () => {
       params.set('category', slug);
     }
     setSearchParams(params);
-  };
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
   };
 
   // Local filtering for quick responsive UI
