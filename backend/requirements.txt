@@ -10,3 +10,5 @@ redis
 celery
 qrcode
 pillow
+pytest
+httpx

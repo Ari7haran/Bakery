@@ -1,12 +1,17 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+import logging
+
 from app.core.config import settings
-from app.database.session import engine, Base, SessionLocal
-from app.routers import auth, products, cart, orders, admin, reviews
+from app.core.database import engine, Base, SessionLocal
+from app.core.exceptions import register_exception_handlers
+from app.api.router import api_router
 from app.utils.seed_data import seed_database
 
-# Create tables
+logger = logging.getLogger(__name__)
+
+# Create tables if not present
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -27,21 +32,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Exception handler
+# Register custom domain exception handlers
+register_exception_handlers(app)
+
+# Global unhandled exception handler
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    logger.exception(f"Unhandled exception during {request.method} {request.url.path}: {exc}")
     return JSONResponse(
         status_code=500,
-        content={"detail": "An unexpected internal server error occurred.", "error": str(exc)},
+        content={"detail": "An unexpected internal server error occurred."},
     )
 
-# Include Routers
-app.include_router(auth.router, prefix=settings.API_V1_STR)
-app.include_router(products.router, prefix=settings.API_V1_STR)
-app.include_router(cart.router, prefix=settings.API_V1_STR)
-app.include_router(orders.router, prefix=settings.API_V1_STR)
-app.include_router(admin.router, prefix=settings.API_V1_STR)
-app.include_router(reviews.router, prefix=settings.API_V1_STR)
+# Include Centralized API Router
+app.include_router(api_router, prefix=settings.API_V1_STR)
 
 @app.on_event("startup")
 def startup_event():

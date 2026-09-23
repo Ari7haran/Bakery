@@ -1,21 +1,7 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
-from app.core.config import settings
+"""
+Backward compatibility facade for database session.
+Re-exports from app.core.database to ensure existing references continue to work seamlessly.
+"""
+from app.core.database import engine, SessionLocal, Base, get_db
 
-# SQLite connection args for multithreading
-connect_args = {"check_same_thread": False} if settings.DATABASE_URL.startswith("sqlite") else {}
-
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args=connect_args
-)
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+__all__ = ["engine", "SessionLocal", "Base", "get_db"]

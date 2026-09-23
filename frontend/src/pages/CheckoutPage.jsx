@@ -36,9 +36,13 @@ const CheckoutPage = () => {
         pickup_date: orderType === 'Takeaway Pickup' ? (pickupSlot?.date || 'Today') : null,
         pickup_time_slot: orderType === 'Takeaway Pickup' ? (pickupSlot?.time || '04:00 PM - 04:30 PM') : null,
         delivery_address: orderType === 'Delivery' ? address : null,
-        payment_method: paymentMethod,
+        payment_method: orderType === 'Takeaway Pickup' ? 'Cash on Pickup' : 'Cash on Delivery',
         coupon_code: appliedCoupon ? appliedCoupon.code : null,
-        notes: notes
+        notes: notes,
+        items: cart.map((item) => ({
+          product_id: item.product.id,
+          quantity: item.quantity,
+        })),
       };
 
       const res = await api.post('/orders/', payload);
@@ -201,46 +205,58 @@ const CheckoutPage = () => {
 
           {/* Payment Method */}
           <div className="bg-white dark:bg-bakery-chocolate/60 p-6 rounded-3xl border border-amber-900/10 dark:border-amber-500/20 shadow-sm space-y-4">
-            <h3 className="font-serif font-bold text-base flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-bakery-orange" /> Payment Options
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-serif font-bold text-base flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-bakery-orange" /> Payment Method
+              </h3>
+              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/50 text-bakery-orange">
+                Cash Only Bakery
+              </span>
+            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <label className={`p-4 rounded-2xl border cursor-pointer transition flex items-center gap-3 ${
-                paymentMethod === 'Cash on Pickup'
-                  ? 'border-bakery-orange bg-amber-50 dark:bg-amber-950/40 ring-2 ring-bakery-orange'
-                  : 'border-amber-900/10'
-              }`}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {orderType === 'Takeaway Pickup' ? (
+                <div className="p-4 rounded-2xl border border-bakery-orange bg-amber-50 dark:bg-amber-950/40 ring-2 ring-bakery-orange flex items-center gap-3">
+                  <input
+                    type="radio"
+                    name="payment"
+                    checked={true}
+                    readOnly
+                    className="accent-bakery-orange"
+                  />
+                  <div>
+                    <span className="font-bold text-xs block">Cash on Pickup</span>
+                    <span className="text-[10px] text-gray-500">Pay cash at bakery counter upon order collection</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 rounded-2xl border border-bakery-orange bg-amber-50 dark:bg-amber-950/40 ring-2 ring-bakery-orange flex items-center gap-3">
+                  <input
+                    type="radio"
+                    name="payment"
+                    checked={true}
+                    readOnly
+                    className="accent-bakery-orange"
+                  />
+                  <div>
+                    <span className="font-bold text-xs block">Cash on Delivery</span>
+                    <span className="text-[10px] text-gray-500">Pay cash to our delivery executive at your doorstep</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="p-4 rounded-2xl border border-dashed border-gray-300 dark:border-amber-900/30 bg-gray-50 dark:bg-amber-950/20 opacity-60 flex items-center gap-3 cursor-not-allowed">
                 <input
                   type="radio"
-                  name="payment"
-                  checked={paymentMethod === 'Cash on Pickup'}
-                  onChange={() => setPaymentMethod('Cash on Pickup')}
-                  className="accent-bakery-orange"
+                  name="payment_disabled"
+                  disabled={true}
+                  className="accent-gray-400"
                 />
                 <div>
-                  <span className="font-bold text-xs block">Cash / Card on Pickup</span>
-                  <span className="text-[10px] text-gray-500">Pay at bakery counter upon receiving</span>
+                  <span className="font-bold text-xs block text-gray-400">Online Payment / UPI</span>
+                  <span className="text-[10px] text-gray-400">Coming soon in future release</span>
                 </div>
-              </label>
-
-              <label className={`p-4 rounded-2xl border cursor-pointer transition flex items-center gap-3 ${
-                paymentMethod === 'Online Payment'
-                  ? 'border-bakery-orange bg-amber-50 dark:bg-amber-950/40 ring-2 ring-bakery-orange'
-                  : 'border-amber-900/10'
-              }`}>
-                <input
-                  type="radio"
-                  name="payment"
-                  checked={paymentMethod === 'Online Payment'}
-                  onChange={() => setPaymentMethod('Online Payment')}
-                  className="accent-bakery-orange"
-                />
-                <div>
-                  <span className="font-bold text-xs block">Stripe / Credit Card</span>
-                  <span className="text-[10px] text-gray-500">Instant online checkout integration</span>
-                </div>
-              </label>
+              </div>
             </div>
           </div>
         </div>

@@ -86,8 +86,17 @@ const AdminDashboardPage = () => {
     try {
       const res = await api.put(`/admin/orders/${orderId}/status`, { status });
       setOrders(orders.map(o => o.id === orderId ? res.data : o));
-    } catch {
-      alert("Failed to update order status");
+    } catch (err) {
+      alert(err.response?.data?.detail || "Failed to update order status");
+    }
+  };
+
+  const handleMarkPaymentPaid = async (orderId) => {
+    try {
+      const res = await api.put(`/admin/orders/${orderId}/payment`);
+      setOrders(orders.map(o => o.id === orderId ? res.data : o));
+    } catch (err) {
+      alert(err.response?.data?.detail || "Failed to mark order as paid");
     }
   };
 
@@ -326,7 +335,22 @@ const AdminDashboardPage = () => {
                     <td className="p-4">{o.user?.full_name || 'Guest'}</td>
                     <td className="p-4 text-amber-700 dark:text-amber-300">{o.pickup_date} ({o.pickup_time_slot || 'Express'})</td>
                     <td className="p-4 font-bold text-bakery-orange">₹{o.final_amount}</td>
-                    <td className="p-4 font-semibold">{o.payment_status}</td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-0.5 text-[11px] font-bold rounded-full ${o.payment_status === 'Paid' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'}`}>
+                          {o.payment_status}
+                        </span>
+                        {o.payment_status !== 'Paid' && (
+                          <button
+                            type="button"
+                            onClick={() => handleMarkPaymentPaid(o.id)}
+                            className="px-2 py-0.5 text-[10px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm transition"
+                          >
+                            Mark Paid
+                          </button>
+                        )}
+                      </div>
+                    </td>
                     <td className="p-4">
                       <select
                         value={o.status}
