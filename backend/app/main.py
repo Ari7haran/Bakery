@@ -4,15 +4,16 @@ from fastapi.responses import JSONResponse
 import logging
 
 from app.core.config import settings
-from app.core.database import engine, Base, SessionLocal
+from app.core.database import engine, Base, SessionLocal, init_db_indexes
 from app.core.exceptions import register_exception_handlers
 from app.api.router import api_router
 from app.utils.seed_data import seed_database
 
 logger = logging.getLogger(__name__)
 
-# Create tables if not present
+# Create tables if not present and initialize indexes
 Base.metadata.create_all(bind=engine)
+init_db_indexes(engine)
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
