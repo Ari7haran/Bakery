@@ -7,6 +7,7 @@ import {
   TrendingUp,
   Plus,
   Trash2,
+  Pencil,
   ShieldCheck
 } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
@@ -30,8 +31,19 @@ const AdminDashboardPage = () => {
   const [newProdName, setNewProdName] = useState('');
   const [newProdCategory, setNewProdCategory] = useState(1);
   const [newProdPrice, setNewProdPrice] = useState(200);
+  const [newProdStock, setNewProdStock] = useState(25);
   const [newProdDesc, setNewProdDesc] = useState('');
   const [newProdImage, setNewProdImage] = useState('https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&auto=format&fit=crop&q=80');
+
+  // Edit Product Modal Form State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [editCategory, setEditCategory] = useState(1);
+  const [editPrice, setEditPrice] = useState(0);
+  const [editStock, setEditStock] = useState(25);
+  const [editDesc, setEditDesc] = useState('');
+  const [editImage, setEditImage] = useState('');
 
   useEffect(() => {
     if (!user || user.role !== 'admin') {
@@ -93,7 +105,7 @@ const AdminDashboardPage = () => {
         is_todays_fresh: true,
         is_popular: true,
         prep_time: "15-20 mins",
-        stock_quantity: 25,
+        stock_quantity: Number(newProdStock),
         image_url: newProdImage
       };
       const res = await api.post('/admin/products', payload);
@@ -101,9 +113,49 @@ const AdminDashboardPage = () => {
       setIsAddModalOpen(false);
       setNewProdName('');
       setNewProdDesc('');
+      setNewProdStock(25);
       alert("Product created successfully!");
     } catch {
       alert("Failed to create product.");
+    }
+  };
+
+  const openEditModal = (product) => {
+    setEditingProduct(product);
+    setEditName(product.name || '');
+    setEditCategory(product.category_id || (product.category?.id || 1));
+    setEditPrice(product.price || 0);
+    setEditStock(product.stock_quantity ?? 25);
+    setEditDesc(product.description || '');
+    setEditImage(product.image_url || '');
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditProduct = async (e) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+    try {
+      const payload = {
+        name: editName,
+        slug: editName.toLowerCase().replace(/\s+/g, '-'),
+        category_id: Number(editCategory),
+        description: editDesc,
+        price: Number(editPrice),
+        is_veg: editingProduct.is_veg ?? true,
+        is_featured: editingProduct.is_featured ?? true,
+        is_todays_fresh: editingProduct.is_todays_fresh ?? true,
+        is_popular: editingProduct.is_popular ?? true,
+        prep_time: editingProduct.prep_time || "15-20 mins",
+        stock_quantity: Number(editStock),
+        image_url: editImage
+      };
+      const res = await api.put(`/admin/products/${editingProduct.id}`, payload);
+      setProducts(products.map(p => p.id === editingProduct.id ? res.data : p));
+      setIsEditModalOpen(false);
+      setEditingProduct(null);
+      alert("Product updated successfully!");
+    } catch (err) {
+      alert(err.response?.data?.detail || "Failed to update product.");
     }
   };
 
@@ -322,8 +374,11 @@ const AdminDashboardPage = () => {
                     <td className="p-4">{p.category?.name || 'Bakery'}</td>
                     <td className="p-4 font-bold text-bakery-orange">₹{p.price}</td>
                     <td className="p-4 font-semibold text-emerald-600">{p.stock_quantity} pcs</td>
-                    <td className="p-4">
-                      <button onClick={() => handleDeleteProduct(p.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg" title="Delete Product">
+                    <td className="p-4 flex items-center gap-1.5">
+                      <button onClick={() => openEditModal(p)} className="p-1.5 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded-lg transition" title="Edit Product">
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => handleDeleteProduct(p.id)} className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-lg transition" title="Delete Product">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </td>
@@ -353,7 +408,7 @@ const AdminDashboardPage = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-bold mb-1">Category</label>
                   <select
@@ -373,6 +428,17 @@ const AdminDashboardPage = () => {
                     required
                     value={newProdPrice}
                     onChange={(e) => setNewProdPrice(Number(e.target.value))}
+                    className="w-full p-2.5 text-xs rounded-xl border"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold mb-1">Stock (pcs)</label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    value={newProdStock}
+                    onChange={(e) => setNewProdStock(Number(e.target.value))}
                     className="w-full p-2.5 text-xs rounded-xl border"
                   />
                 </div>
@@ -413,6 +479,112 @@ const AdminDashboardPage = () => {
                   className="flex-1 py-2.5 bg-bakery-orange text-white text-xs font-bold rounded-xl shadow"
                 >
                   Save Product
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal to Edit Existing Product */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-bakery-chocolate w-full max-w-lg rounded-3xl p-6 shadow-2xl border space-y-4">
+            <div className="flex items-center justify-between border-b border-amber-900/10 pb-3">
+              <h3 className="font-serif text-xl font-bold flex items-center gap-2">
+                <Pencil className="w-5 h-5 text-bakery-orange" /> Edit Bakery Product
+              </h3>
+              <button
+                onClick={() => { setIsEditModalOpen(false); setEditingProduct(null); }}
+                className="text-gray-400 hover:text-gray-600 text-sm font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            <form onSubmit={handleEditProduct} className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold mb-1">Product Name</label>
+                <input
+                  type="text"
+                  required
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full p-2.5 text-xs rounded-xl border bg-cream-50 dark:bg-amber-900/40"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-bold mb-1">Category</label>
+                  <select
+                    value={editCategory}
+                    onChange={(e) => setEditCategory(Number(e.target.value))}
+                    className="w-full p-2.5 text-xs rounded-xl border bg-white dark:bg-amber-900"
+                  >
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold mb-1">Price (₹)</label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    value={editPrice}
+                    onChange={(e) => setEditPrice(Number(e.target.value))}
+                    className="w-full p-2.5 text-xs rounded-xl border bg-cream-50 dark:bg-amber-900/40"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold mb-1">Stock (pcs)</label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    value={editStock}
+                    onChange={(e) => setEditStock(Number(e.target.value))}
+                    className="w-full p-2.5 text-xs rounded-xl border bg-cream-50 dark:bg-amber-900/40"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold mb-1">Description</label>
+                <textarea
+                  required
+                  rows={2}
+                  value={editDesc}
+                  onChange={(e) => setEditDesc(e.target.value)}
+                  className="w-full p-2.5 text-xs rounded-xl border bg-cream-50 dark:bg-amber-900/40"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold mb-1">Image URL</label>
+                <input
+                  type="url"
+                  required
+                  value={editImage}
+                  onChange={(e) => setEditImage(e.target.value)}
+                  className="w-full p-2.5 text-xs rounded-xl border bg-cream-50 dark:bg-amber-900/40"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => { setIsEditModalOpen(false); setEditingProduct(null); }}
+                  className="flex-1 py-2.5 bg-gray-200 dark:bg-amber-900 text-xs font-bold rounded-xl"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 bg-bakery-orange text-white text-xs font-bold rounded-xl shadow hover:opacity-90 transition"
+                >
+                  Save Changes
                 </button>
               </div>
             </form>

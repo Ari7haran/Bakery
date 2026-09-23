@@ -26,6 +26,16 @@ class PaymentStatusEnum(str, enum.Enum):
     PAID = "Paid"
     FAILED = "Failed"
 
+class PaymentMethodEnum(str, enum.Enum):
+    CASH = "CASH"
+    CASH_ON_PICKUP = "Cash on Pickup"
+    CASH_ON_DELIVERY = "Cash on Delivery"
+    # Extensible architecture for future payment providers (currently disabled):
+    CARD = "CARD"
+    UPI = "UPI"
+    STRIPE = "STRIPE"
+    RAZORPAY = "RAZORPAY"
+
 class User(Base):
     __tablename__ = "users"
 
