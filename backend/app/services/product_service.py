@@ -54,8 +54,15 @@ class ProductService:
             raise ResourceNotFoundError(f"Product with id {product_id} not found")
         return product
 
-    def get_recommendations(self, product_id: int) -> List[Product]:
-        return self.product_repo.get_recommendations(product_id)
+    def get_recommendations(self, product_id: int, limit: int = 4) -> List[Product]:
+        target = self.product_repo.get_by_id(product_id)
+        if not target:
+            raise ResourceNotFoundError(f"Product with id {product_id} not found")
+
+        if limit <= 0:
+            return []
+
+        return self.product_repo.get_recommendations(product_id, limit=limit)
 
     def list_categories(self) -> List[Category]:
         return self.category_repo.list_all()

@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Path
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -52,8 +52,12 @@ def get_products(
     )
 
 @router.get("/products/recommendations/{product_id}", response_model=List[ProductOut])
-def get_ai_recommendations(product_id: int, service: ProductService = Depends(get_product_service)):
-    return service.get_recommendations(product_id)
+def get_ai_recommendations(
+    product_id: int = Path(..., gt=0, description="Product ID must be greater than zero"),
+    limit: int = Query(4, ge=1, le=20, description="Number of recommendations to return"),
+    service: ProductService = Depends(get_product_service)
+):
+    return service.get_recommendations(product_id, limit=limit)
 
 @router.get("/products/{product_id}", response_model=ProductOut)
 def get_product(product_id: int, service: ProductService = Depends(get_product_service)):

@@ -11,6 +11,7 @@ const ProductDetailPage = () => {
 
   const [product, setProduct] = useState(null);
   const [recommendations, setRecommendations] = useState([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(true);
   const [reviews, setReviews] = useState([]);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
@@ -22,18 +23,31 @@ const ProductDetailPage = () => {
 
   useEffect(() => {
     if (!id) return;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     const fetchDetails = async () => {
       try {
-        const [prodRes, recRes, revRes] = await Promise.all([
-          api.get(`/products/${id}`),
-          api.get(`/products/recommendations/${id}`),
-          api.get(`/products/${id}/reviews`)
-        ]);
+        const prodRes = await api.get(`/products/${id}`);
         setProduct(prodRes.data);
-        setRecommendations(recRes.data);
-        setReviews(revRes.data);
       } catch (err) {
         console.error("Failed to load product details", err);
+      }
+
+      setLoadingRecommendations(true);
+      try {
+        const recRes = await api.get(`/products/recommendations/${id}`);
+        setRecommendations(recRes.data || []);
+      } catch (err) {
+        console.error("Failed to load recommendations", err);
+        setRecommendations([]);
+      } finally {
+        setLoadingRecommendations(false);
+      }
+
+      try {
+        const revRes = await api.get(`/products/${id}/reviews`);
+        setReviews(revRes.data || []);
+      } catch (err) {
+        console.error("Failed to load reviews", err);
       }
     };
     fetchDetails();
@@ -294,17 +308,27 @@ const ProductDetailPage = () => {
       </div>
 
       {/* AI Frequently Bought Together Recommendations */}
-      <section className="space-y-6">
+      <section className="space-y-6 pt-6 border-t border-amber-900/10">
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-bakery-orange" />
           <h2 className="font-serif text-2xl font-bold">Frequently Bought Together</h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {recommendations.map((rec) => (
-            <ProductCard key={rec.id} product={rec} />
-          ))}
-        </div>
+        {loadingRecommendations ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map((n) => (
+              <div key={n} className="h-72 rounded-3xl bg-amber-50/50 dark:bg-amber-950/20 animate-pulse border border-amber-900/5" />
+            ))}
+          </div>
+        ) : recommendations.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {recommendations.map((rec) => (
+              <ProductCard key={rec.id} product={rec} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-gray-400 italic">No recommendations available at this time.</p>
+        )}
       </section>
     </div>
   );
