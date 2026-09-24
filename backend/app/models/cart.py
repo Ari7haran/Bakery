@@ -17,6 +17,13 @@ class CartItem(Base):
     user = relationship("User", back_populates="cart_items")
     product = relationship("Product")
 
+    @property
+    def subtotal(self) -> float:
+        if not self.product:
+            return 0.0
+        unit_price = self.product.discount_price if self.product.discount_price is not None else self.product.price
+        return round(unit_price * self.quantity, 2)
+
 class WishlistItem(Base):
     __tablename__ = "wishlist_items"
     __table_args__ = (

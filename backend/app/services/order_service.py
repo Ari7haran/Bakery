@@ -226,8 +226,7 @@ class OrderService:
                 self.db.add(order_item)
 
             # Clear cart without premature commit to guarantee transaction atomicity
-            if used_db_cart:
-                self.cart_repo.clear_cart(current_user.id, commit=False)
+            self.cart_repo.clear_cart(current_user.id, commit=False)
 
             # Award loyalty points (10% of final order value)
             earned_points = int(final_amount * 0.1)
