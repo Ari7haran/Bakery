@@ -168,11 +168,20 @@ const ProductDetailPage = () => {
             </div>
 
             <button
+              disabled={product.stock_quantity <= 0}
               onClick={() => addToCart(product, quantity)}
-              className="flex-1 w-full sm:w-auto py-3.5 px-6 bg-gradient-to-r from-bakery-brown to-bakery-orange text-white font-extrabold text-sm rounded-2xl shadow-xl hover:opacity-95 transition flex items-center justify-center gap-2"
+              className={`flex-1 w-full sm:w-auto py-3.5 px-6 font-extrabold text-sm rounded-2xl shadow-xl transition flex items-center justify-center gap-2 ${
+                product.stock_quantity <= 0
+                  ? 'bg-gray-400 dark:bg-gray-600 text-white cursor-not-allowed opacity-60'
+                  : 'bg-gradient-to-r from-bakery-brown to-bakery-orange text-white hover:opacity-95'
+              }`}
             >
               <ShoppingBag className="w-5 h-5" />
-              <span>Add {quantity} to Cart • ₹{displayPrice * quantity}</span>
+              <span>
+                {product.stock_quantity <= 0
+                  ? 'Out of Stock'
+                  : `Add ${quantity} to Cart • ₹${displayPrice * quantity}`}
+              </span>
             </button>
           </div>
 

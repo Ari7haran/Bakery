@@ -235,8 +235,10 @@ class OrderService:
             self.db.commit()
             self.db.refresh(new_order)
             return new_order
-        except Exception:
+        except Exception as e:
             self.db.rollback()
+            if "check_product_stock_non_neg" in str(e).lower() or "stock_quantity" in str(e).lower():
+                raise BusinessRuleError("Product stock changed during checkout. Please review your cart and try again.")
             raise
 
     def get_my_orders(self, user_id: int) -> List[Order]:

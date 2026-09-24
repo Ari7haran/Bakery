@@ -20,7 +20,7 @@ from app.services.coupon_service import CouponService
 from app.services.payment_service import PaymentService
 from app.schemas.analytics import AnalyticsOut
 from app.schemas.order import OrderOut, OrderStatusUpdate
-from app.schemas.product import ProductOut, ProductBase
+from app.schemas.product import ProductOut, ProductBase, ProductStockUpdate
 from app.schemas.user import UserOut
 
 router = APIRouter(prefix="/admin", tags=["Admin Dashboard & Management"])
@@ -106,6 +106,16 @@ def update_product(
     service: ProductService = Depends(get_product_service)
 ):
     return service.update_product(product_id, product_in)
+
+@router.put("/products/{product_id}/stock", response_model=ProductOut)
+@router.patch("/products/{product_id}/stock", response_model=ProductOut)
+def update_product_stock(
+    product_id: int,
+    stock_in: ProductStockUpdate,
+    admin: User = Depends(get_current_admin),
+    service: ProductService = Depends(get_product_service)
+):
+    return service.update_product_stock(product_id, stock_in.stock_quantity)
 
 @router.delete("/products/{product_id}")
 def delete_product(

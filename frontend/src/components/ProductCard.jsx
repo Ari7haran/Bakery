@@ -70,9 +70,15 @@ const ProductCard = ({ product }) => {
               <span>{product.rating}</span>
               <span className="text-gray-400 font-normal text-[10px]">({product.review_count})</span>
             </div>
-            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full">
-              In Stock ({product.stock_quantity})
-            </span>
+            {product.stock_quantity > 0 ? (
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full">
+                In Stock ({product.stock_quantity})
+              </span>
+            ) : (
+              <span className="text-[10px] text-red-600 dark:text-red-400 font-semibold bg-red-50 dark:bg-red-950/50 px-2 py-0.5 rounded-full">
+                Out of Stock
+              </span>
+            )}
           </div>
 
           <Link to={`/product/${product.id}`}>
@@ -100,11 +106,16 @@ const ProductCard = ({ product }) => {
           </div>
 
           <button
+            disabled={product.stock_quantity <= 0}
             onClick={() => addToCart(product, 1)}
-            className="flex items-center gap-1.5 bg-bakery-orange hover:bg-bakery-brown text-white text-xs font-bold px-3 py-1.5 rounded-xl transition shadow-md group/btn"
+            className={`flex items-center gap-1.5 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition shadow-md group/btn ${
+              product.stock_quantity <= 0
+                ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed opacity-60'
+                : 'bg-bakery-orange hover:bg-bakery-brown'
+            }`}
           >
             <Plus className="w-3.5 h-3.5 group-hover/btn:rotate-90 transition transform" />
-            <span>Add</span>
+            <span>{product.stock_quantity <= 0 ? 'Out of Stock' : 'Add'}</span>
           </button>
         </div>
       </div>

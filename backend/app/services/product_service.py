@@ -64,6 +64,13 @@ class ProductService:
         return self.banner_repo.list_active()
 
     def create_product(self, product_in: ProductBase) -> Product:
+        if product_in.stock_quantity < 0:
+            raise BusinessRuleError("Stock quantity cannot be negative")
+        if product_in.price < 0:
+            raise BusinessRuleError("Price cannot be negative")
+        if product_in.discount_price is not None and product_in.discount_price < 0:
+            raise BusinessRuleError("Discount price cannot be negative")
+
         category = self.category_repo.get_by_id(product_in.category_id)
         if not category:
             raise BusinessRuleError(f"Category with id {product_in.category_id} not found")
@@ -76,6 +83,13 @@ class ProductService:
         return self.product_repo.add(product)
 
     def update_product(self, product_id: int, product_in: ProductBase) -> Product:
+        if product_in.stock_quantity < 0:
+            raise BusinessRuleError("Stock quantity cannot be negative")
+        if product_in.price < 0:
+            raise BusinessRuleError("Price cannot be negative")
+        if product_in.discount_price is not None and product_in.discount_price < 0:
+            raise BusinessRuleError("Discount price cannot be negative")
+
         product = self.product_repo.get_by_id(product_id)
         if not product:
             raise ResourceNotFoundError("Product not found")
@@ -87,6 +101,19 @@ class ProductService:
         for key, value in product_in.model_dump().items():
             setattr(product, key, value)
 
+        self.product_repo.db.commit()
+        self.product_repo.db.refresh(product)
+        return product
+
+    def update_product_stock(self, product_id: int, stock_quantity: int) -> Product:
+        if stock_quantity < 0:
+            raise BusinessRuleError("Stock quantity cannot be negative")
+
+        product = self.product_repo.get_by_id(product_id)
+        if not product:
+            raise ResourceNotFoundError(f"Product with id {product_id} not found")
+
+        product.stock_quantity = stock_quantity
         self.product_repo.db.commit()
         self.product_repo.db.refresh(product)
         return product
