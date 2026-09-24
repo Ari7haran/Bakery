@@ -322,7 +322,7 @@ const AdminDashboardPage = () => {
                 <tr>
                   <th className="p-4">Order #</th>
                   <th className="p-4">Customer</th>
-                  <th className="p-4">Slot</th>
+                  <th className="p-4">Fulfillment Details</th>
                   <th className="p-4">Amount</th>
                   <th className="p-4">Payment</th>
                   <th className="p-4">Status & Switcher</th>
@@ -333,7 +333,17 @@ const AdminDashboardPage = () => {
                   <tr key={o.id} className="hover:bg-amber-50/50 dark:hover:bg-amber-900/20 transition">
                     <td className="p-4 font-bold">{o.order_number}</td>
                     <td className="p-4">{o.user?.full_name || 'Guest'}</td>
-                    <td className="p-4 text-amber-700 dark:text-amber-300">{o.pickup_date} ({o.pickup_time_slot || 'Express'})</td>
+                    <td className="p-4 text-amber-700 dark:text-amber-300">
+                      {o.order_type === 'Delivery' ? (
+                        <span className="font-semibold text-emerald-700 dark:text-emerald-300">
+                          🛵 Delivery: {o.delivery_address}
+                        </span>
+                      ) : (
+                        <span>
+                          🥐 Pickup: {o.pickup_date} ({o.pickup_time_slot || 'Express'})
+                        </span>
+                      )}
+                    </td>
                     <td className="p-4 font-bold text-bakery-orange">₹{o.final_amount}</td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">

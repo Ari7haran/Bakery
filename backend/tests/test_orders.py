@@ -52,6 +52,8 @@ def test_reject_online_payment(client, customer_headers, seed_test_data):
     p1 = seed_test_data["product_1"]
     order_payload = {
         "order_type": "Takeaway Pickup",
+        "pickup_date": "Today",
+        "pickup_time_slot": "04:00 PM - 04:30 PM",
         "payment_method": "Online Payment",
         "items": [{"product_id": p1.id, "quantity": 1}]
     }
@@ -64,6 +66,8 @@ def test_order_user_isolation(client, customer_headers, customer_b_headers, seed
     # Alice places an order
     order_payload = {
         "order_type": "Takeaway Pickup",
+        "pickup_date": "Today",
+        "pickup_time_slot": "04:00 PM - 04:30 PM",
         "payment_method": "Cash on Pickup",
         "items": [{"product_id": p1.id, "quantity": 1}]
     }
@@ -79,6 +83,8 @@ def test_order_status_state_machine(client, customer_headers, admin_headers, see
     # Alice places order
     order_payload = {
         "order_type": "Takeaway Pickup",
+        "pickup_date": "Today",
+        "pickup_time_slot": "04:00 PM - 04:30 PM",
         "payment_method": "Cash on Pickup",
         "items": [{"product_id": p1.id, "quantity": 1}]
     }
@@ -124,6 +130,8 @@ def test_create_order_multiple_items_and_correct_totals(client, customer_headers
 
     order_payload = {
         "order_type": "Takeaway Pickup",
+        "pickup_date": "Today",
+        "pickup_time_slot": "04:00 PM - 04:30 PM",
         "payment_method": "Cash on Pickup",
         "items": [
             {"product_id": p1.id, "quantity": 2},  # 360
@@ -144,6 +152,8 @@ def test_create_order_consolidates_duplicate_product_items(client, customer_head
 
     order_payload = {
         "order_type": "Takeaway Pickup",
+        "pickup_date": "Today",
+        "pickup_time_slot": "04:00 PM - 04:30 PM",
         "payment_method": "Cash on Pickup",
         "items": [
             {"product_id": p1.id, "quantity": 1},
@@ -164,6 +174,8 @@ def test_create_order_zero_and_negative_quantity_rejected(client, customer_heade
 
     res_zero = client.post("/api/v1/orders/", json={
         "order_type": "Takeaway Pickup",
+        "pickup_date": "Today",
+        "pickup_time_slot": "04:00 PM - 04:30 PM",
         "payment_method": "Cash on Pickup",
         "items": [{"product_id": p1.id, "quantity": 0}]
     }, headers=customer_headers)
@@ -171,6 +183,8 @@ def test_create_order_zero_and_negative_quantity_rejected(client, customer_heade
 
     res_neg = client.post("/api/v1/orders/", json={
         "order_type": "Takeaway Pickup",
+        "pickup_date": "Today",
+        "pickup_time_slot": "04:00 PM - 04:30 PM",
         "payment_method": "Cash on Pickup",
         "items": [{"product_id": p1.id, "quantity": -3}]
     }, headers=customer_headers)
@@ -180,6 +194,8 @@ def test_create_order_insufficient_stock_rejected(client, customer_headers, seed
     p2 = seed_test_data["product_2"]  # stock: 5
     res = client.post("/api/v1/orders/", json={
         "order_type": "Takeaway Pickup",
+        "pickup_date": "Today",
+        "pickup_time_slot": "04:00 PM - 04:30 PM",
         "payment_method": "Cash on Pickup",
         "items": [{"product_id": p2.id, "quantity": 10}]
     }, headers=customer_headers)
@@ -189,6 +205,8 @@ def test_create_order_insufficient_stock_rejected(client, customer_headers, seed
 def test_create_order_nonexistent_product_rejected(client, customer_headers):
     res = client.post("/api/v1/orders/", json={
         "order_type": "Takeaway Pickup",
+        "pickup_date": "Today",
+        "pickup_time_slot": "04:00 PM - 04:30 PM",
         "payment_method": "Cash on Pickup",
         "items": [{"product_id": 999999, "quantity": 1}]
     }, headers=customer_headers)
@@ -197,6 +215,8 @@ def test_create_order_nonexistent_product_rejected(client, customer_headers):
 def test_create_order_empty_items_rejected(client, customer_headers):
     res = client.post("/api/v1/orders/", json={
         "order_type": "Takeaway Pickup",
+        "pickup_date": "Today",
+        "pickup_time_slot": "04:00 PM - 04:30 PM",
         "payment_method": "Cash on Pickup",
         "items": []
     }, headers=customer_headers)
@@ -206,6 +226,8 @@ def test_create_order_invalid_coupon_rejected(client, customer_headers, seed_tes
     p1 = seed_test_data["product_1"]
     res = client.post("/api/v1/orders/", json={
         "order_type": "Takeaway Pickup",
+        "pickup_date": "Today",
+        "pickup_time_slot": "04:00 PM - 04:30 PM",
         "payment_method": "Cash on Pickup",
         "coupon_code": "DOESNOTEXIST",
         "items": [{"product_id": p1.id, "quantity": 1}]
@@ -250,6 +272,8 @@ def test_create_order_historical_price_snapshot(client, customer_headers, seed_t
 
     res = client.post("/api/v1/orders/", json={
         "order_type": "Takeaway Pickup",
+        "pickup_date": "Today",
+        "pickup_time_slot": "04:00 PM - 04:30 PM",
         "payment_method": "Cash on Pickup",
         "items": [{"product_id": p1.id, "quantity": 1}]
     }, headers=customer_headers)
@@ -278,6 +302,8 @@ def test_customer_cancel_order_success_and_stock_restoration(client, customer_he
     # Place order
     res = client.post("/api/v1/orders/", json={
         "order_type": "Takeaway Pickup",
+        "pickup_date": "Today",
+        "pickup_time_slot": "04:00 PM - 04:30 PM",
         "payment_method": "Cash on Pickup",
         "items": [{"product_id": p1.id, "quantity": 2}]
     }, headers=customer_headers)
@@ -306,6 +332,8 @@ def test_customer_cancel_order_unauthorized(client, customer_headers, customer_b
     p1 = seed_test_data["product_1"]
     res = client.post("/api/v1/orders/", json={
         "order_type": "Takeaway Pickup",
+        "pickup_date": "Today",
+        "pickup_time_slot": "04:00 PM - 04:30 PM",
         "payment_method": "Cash on Pickup",
         "items": [{"product_id": p1.id, "quantity": 1}]
     }, headers=customer_headers)
@@ -319,6 +347,8 @@ def test_customer_cancel_order_invalid_state(client, customer_headers, admin_hea
     p1 = seed_test_data["product_1"]
     res = client.post("/api/v1/orders/", json={
         "order_type": "Takeaway Pickup",
+        "pickup_date": "Today",
+        "pickup_time_slot": "04:00 PM - 04:30 PM",
         "payment_method": "Cash on Pickup",
         "items": [{"product_id": p1.id, "quantity": 1}]
     }, headers=customer_headers)
@@ -339,6 +369,8 @@ def test_admin_cancel_order_restores_inventory(client, customer_headers, admin_h
 
     res = client.post("/api/v1/orders/", json={
         "order_type": "Takeaway Pickup",
+        "pickup_date": "Today",
+        "pickup_time_slot": "04:00 PM - 04:30 PM",
         "payment_method": "Cash on Pickup",
         "items": [{"product_id": p1.id, "quantity": 2}]
     }, headers=customer_headers)
@@ -408,6 +440,8 @@ def test_order_transaction_rollback_on_failure():
                     current_user=user,
                     order_in=OrderCreate(
                         order_type="Takeaway Pickup",
+                        pickup_date="Today",
+                        pickup_time_slot="04:00 PM - 04:30 PM",
                         payment_method="Cash on Pickup"
                     )
                 )
@@ -441,6 +475,8 @@ def test_admin_can_view_all_orders(client, admin_headers, customer_headers, seed
     p1 = seed_test_data["product_1"]
     client.post("/api/v1/orders/", json={
         "order_type": "Takeaway Pickup",
+        "pickup_date": "Today",
+        "pickup_time_slot": "04:00 PM - 04:30 PM",
         "payment_method": "Cash on Pickup",
         "items": [{"product_id": p1.id, "quantity": 1}]
     }, headers=customer_headers)

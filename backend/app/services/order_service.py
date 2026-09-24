@@ -7,7 +7,7 @@ from app.repositories.user_repository import UserRepository
 from app.services.coupon_service import CouponService
 from app.services.payment_service import PaymentService
 from app.core.exceptions import ResourceNotFoundError, BusinessRuleError, ForbiddenError
-from app.models.order import Order, OrderItem, OrderStatusEnum, PaymentStatusEnum, OrderTypeEnum
+from app.models.order import Order, OrderItem, OrderStatusEnum, PaymentStatusEnum, OrderTypeEnum, PaymentMethodEnum
 from app.models.user import User
 from app.schemas.order import OrderCreate
 from app.utils.qr_code import generate_order_number, generate_pickup_number, generate_qr_code
@@ -17,7 +17,11 @@ ALLOWED_STATUS_TRANSITIONS = {
     OrderStatusEnum.RECEIVED.value: {OrderStatusEnum.PREPARING.value, OrderStatusEnum.CANCELLED.value},
     OrderStatusEnum.PREPARING.value: {OrderStatusEnum.BAKING.value, OrderStatusEnum.CANCELLED.value},
     OrderStatusEnum.BAKING.value: {OrderStatusEnum.PACKING.value, OrderStatusEnum.CANCELLED.value},
-    OrderStatusEnum.PACKING.value: {OrderStatusEnum.READY_FOR_PICKUP.value, OrderStatusEnum.CANCELLED.value},
+    OrderStatusEnum.PACKING.value: {
+        OrderStatusEnum.READY_FOR_PICKUP.value,
+        OrderStatusEnum.COMPLETED.value,
+        OrderStatusEnum.CANCELLED.value
+    },
     OrderStatusEnum.READY_FOR_PICKUP.value: {OrderStatusEnum.COMPLETED.value, OrderStatusEnum.CANCELLED.value},
     OrderStatusEnum.COMPLETED.value: set(),
     OrderStatusEnum.CANCELLED.value: set(),
@@ -43,11 +47,11 @@ class OrderService:
         self.db = db
 
     def create_order(self, current_user: User, order_in: OrderCreate) -> Order:
-        # 1. Validate payment method: CASH only
-        normalized_payment_method = self.payment_service.validate_payment_method(order_in.payment_method)
+        # 1. Validate order type
+        if not order_in.order_type or not order_in.order_type.strip():
+            raise BusinessRuleError("Order type is required. Allowed types: 'Takeaway Pickup', 'Delivery'")
 
-        # 2. Validate order type and delivery address
-        raw_order_type = (order_in.order_type or "").strip()
+        raw_order_type = order_in.order_type.strip()
         valid_order_types = {
             OrderTypeEnum.TAKEAWAY.value.lower(): OrderTypeEnum.TAKEAWAY.value,
             OrderTypeEnum.DELIVERY.value.lower(): OrderTypeEnum.DELIVERY.value,
@@ -60,9 +64,57 @@ class OrderService:
                 f"Invalid order type: '{order_in.order_type}'. Allowed types: 'Takeaway Pickup', 'Delivery'"
             )
 
+        # 2. Strict Delivery vs. Takeaway Field and Payment Validation
         if matched_order_type == OrderTypeEnum.DELIVERY.value:
             if not order_in.delivery_address or not order_in.delivery_address.strip():
                 raise BusinessRuleError("Delivery address is required for Delivery orders")
+
+            clean_address = order_in.delivery_address.strip()
+            if len(clean_address) < 5:
+                raise BusinessRuleError("Delivery address is too short. Please provide a complete address")
+            if len(clean_address) > 500:
+                raise BusinessRuleError("Delivery address cannot exceed 500 characters")
+
+            # Mutual exclusivity: pickup fields are prohibited on Delivery orders
+            if (order_in.pickup_date and order_in.pickup_date.strip()) or (order_in.pickup_time_slot and order_in.pickup_time_slot.strip()):
+                raise BusinessRuleError("Delivery orders cannot contain pickup scheduling fields")
+
+            # Validate payment method compatibility
+            if order_in.payment_method and "PICKUP" in order_in.payment_method.upper():
+                raise BusinessRuleError("Delivery orders cannot use 'Cash on Pickup'. Please use 'Cash on Delivery'")
+
+            normalized_payment_method = PaymentMethodEnum.CASH_ON_DELIVERY.value
+            clean_pickup_date = None
+            clean_pickup_time_slot = None
+            pickup_num = None
+
+        else:  # Takeaway Pickup
+            if not order_in.pickup_date or not order_in.pickup_date.strip():
+                raise BusinessRuleError("Pickup date is required for Takeaway orders")
+            clean_pickup_date = order_in.pickup_date.strip()
+            if len(clean_pickup_date) > 50:
+                raise BusinessRuleError("Pickup date cannot exceed 50 characters")
+
+            if not order_in.pickup_time_slot or not order_in.pickup_time_slot.strip():
+                raise BusinessRuleError("Pickup time slot is required for Takeaway orders")
+            clean_pickup_time_slot = order_in.pickup_time_slot.strip()
+            if len(clean_pickup_time_slot) > 50:
+                raise BusinessRuleError("Pickup time slot cannot exceed 50 characters")
+
+            # Mutual exclusivity: delivery address is prohibited on Takeaway orders
+            if order_in.delivery_address and order_in.delivery_address.strip():
+                raise BusinessRuleError("Takeaway orders cannot contain a delivery address")
+
+            # Validate payment method compatibility
+            if order_in.payment_method and "DELIVERY" in order_in.payment_method.upper():
+                raise BusinessRuleError("Takeaway orders cannot use 'Cash on Delivery'. Please use 'Cash on Pickup'")
+
+            normalized_payment_method = PaymentMethodEnum.CASH_ON_PICKUP.value
+            clean_address = None
+            pickup_num = generate_pickup_number()
+
+        # Validate that payment is cash-based
+        self.payment_service.validate_payment_method(order_in.payment_method)
 
         # 3. Gather and consolidate items to order
         consolidated_items: Dict[int, int] = {}
@@ -131,11 +183,11 @@ class OrderService:
             if not self.order_repo.get_by_order_number(order_num):
                 break
 
-        is_takeaway = (matched_order_type == OrderTypeEnum.TAKEAWAY.value)
-        pickup_num = generate_pickup_number() if is_takeaway else None
-
         # 7. Prepare QR Code Payload
-        qr_payload = f"ORDER:{order_num}|USER:{current_user.email}|PICKUP:{pickup_num}|AMOUNT:₹{final_amount}"
+        if matched_order_type == OrderTypeEnum.TAKEAWAY.value:
+            qr_payload = f"ORDER:{order_num}|USER:{current_user.email}|PICKUP:{pickup_num}|AMOUNT:₹{final_amount}"
+        else:
+            qr_payload = f"ORDER:{order_num}|USER:{current_user.email}|TYPE:Delivery|AMOUNT:₹{final_amount}"
 
         # 8. Atomic Transaction: deduct stock, generate QR, save order, save items, award points, clear cart
         try:
@@ -151,14 +203,14 @@ class OrderService:
                 discount_amount=discount_amount,
                 final_amount=final_amount,
                 order_type=matched_order_type,
-                pickup_date=order_in.pickup_date,
-                pickup_time_slot=order_in.pickup_time_slot,
+                pickup_date=clean_pickup_date,
+                pickup_time_slot=clean_pickup_time_slot,
                 pickup_number=pickup_num,
                 qr_code_data=qr_code_image,
                 status=OrderStatusEnum.RECEIVED.value,
                 payment_method=normalized_payment_method,
                 payment_status=PaymentStatusEnum.PENDING.value,
-                delivery_address=order_in.delivery_address.strip() if order_in.delivery_address else None,
+                delivery_address=clean_address,
                 notes=order_in.notes
             )
             self.db.add(new_order)

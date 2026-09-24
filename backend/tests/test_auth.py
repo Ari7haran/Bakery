@@ -196,8 +196,10 @@ def test_admin_can_access_intended_admin_endpoints(client, admin_headers):
 def test_customer_order_ownership_isolation(client, seed_test_data, customer_headers, customer_b_headers):
     # Customer Alice creates an order
     order_payload = {
-        "order_type": "Takeaway",
-        "payment_method": "Cash on Delivery",
+        "order_type": "Takeaway Pickup",
+        "pickup_date": "Today",
+        "pickup_time_slot": "04:00 PM - 04:30 PM",
+        "payment_method": "Cash on Pickup",
         "items": [{"product_id": seed_test_data["product_1"].id, "quantity": 1}]
     }
     create_res = client.post("/api/v1/orders/", json=order_payload, headers=customer_headers)

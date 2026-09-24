@@ -122,7 +122,9 @@ const ProfilePage = () => {
                       Placed on {new Date(order.created_at).toLocaleDateString()} • {order.items.length} items
                     </p>
                     <p className="text-xs text-amber-700 dark:text-amber-300 font-semibold">
-                      Pickup Slot: {order.pickup_date} ({order.pickup_time_slot || 'Express Takeaway'})
+                      {order.order_type === 'Delivery'
+                        ? `🛵 Delivery: ${order.delivery_address || 'Home Delivery'}`
+                        : `🥐 Pickup Slot: ${order.pickup_date} (${order.pickup_time_slot || 'Express Takeaway'})`}
                     </p>
                   </div>
 

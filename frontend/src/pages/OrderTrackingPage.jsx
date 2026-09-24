@@ -101,13 +101,17 @@ const OrderTrackingPage = () => {
         {/* Top Info Banner */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-amber-50 dark:bg-amber-950/40 rounded-2xl border border-amber-900/10">
           <div>
-            <p className="text-xs text-gray-500">Pickup Number</p>
-            <p className="font-serif text-2xl font-extrabold text-bakery-orange">{order.pickup_number || 'N/A'}</p>
+            <p className="text-xs text-gray-500">{order.order_type === 'Delivery' ? 'Fulfillment Type' : 'Pickup Number'}</p>
+            <p className="font-serif text-2xl font-extrabold text-bakery-orange">
+              {order.order_type === 'Delivery' ? '🛵 Delivery' : (order.pickup_number || 'N/A')}
+            </p>
           </div>
           <div>
-            <p className="text-xs text-gray-500">Scheduled Time Slot</p>
+            <p className="text-xs text-gray-500">{order.order_type === 'Delivery' ? 'Delivery Destination' : 'Scheduled Time Slot'}</p>
             <p className="text-sm font-bold text-bakery-dark dark:text-cream-100">
-              {order.pickup_date} • {order.pickup_time_slot || 'Express Pickup'}
+              {order.order_type === 'Delivery'
+                ? order.delivery_address
+                : `${order.pickup_date} • ${order.pickup_time_slot || 'Express Pickup'}`}
             </p>
           </div>
           <div>
@@ -146,19 +150,21 @@ const OrderTrackingPage = () => {
           </div>
         </div>
 
-        {/* Express Pickup QR Code Display */}
+        {/* Express Pickup / Delivery QR Code Display */}
         {order.qr_code_data && (
           <div className="bg-cream-100 dark:bg-amber-950/60 p-6 rounded-3xl text-center space-y-4 border border-amber-900/10">
             <div className="inline-flex items-center gap-2 text-xs font-extrabold text-bakery-orange bg-amber-200/60 dark:bg-amber-900/60 px-3 py-1 rounded-full">
-              <QrCode className="w-4 h-4" /> Scan Code at Express Counter
+              <QrCode className="w-4 h-4" /> {order.order_type === 'Delivery' ? 'Digital Delivery Receipt' : 'Scan Code at Express Counter'}
             </div>
             
             <div className="w-48 h-48 mx-auto bg-white p-3 rounded-2xl shadow-md border">
-              <img src={order.qr_code_data} alt="Order Pickup QR Code" className="w-full h-full object-contain" />
+              <img src={order.qr_code_data} alt="Order QR Code" className="w-full h-full object-contain" />
             </div>
 
             <p className="text-xs text-gray-600 dark:text-amber-200/70 max-w-sm mx-auto">
-              Show this QR receipt to our bakery express counter staff to pick up your freshly packed warm order instantly!
+              {order.order_type === 'Delivery'
+                ? 'Keep this digital QR receipt handy for our delivery rider upon doorstep arrival!'
+                : 'Show this QR receipt to our bakery express counter staff to pick up your freshly packed warm order instantly!'}
             </p>
           </div>
         )}

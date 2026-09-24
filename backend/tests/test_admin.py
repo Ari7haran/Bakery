@@ -14,6 +14,8 @@ def test_admin_mark_payment_paid(client, customer_headers, admin_headers, seed_t
     # Customer places order
     order_payload = {
         "order_type": "Takeaway Pickup",
+        "pickup_date": "Today",
+        "pickup_time_slot": "04:00 PM - 04:30 PM",
         "payment_method": "Cash on Pickup",
         "items": [{"product_id": p1.id, "quantity": 1}]
     }
