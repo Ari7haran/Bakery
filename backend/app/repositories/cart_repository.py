@@ -23,9 +23,10 @@ class CartRepository(BaseRepository[CartItem]):
         item = CartItem(user_id=user_id, product_id=product_id, quantity=quantity)
         return self.add(item)
 
-    def clear_cart(self, user_id: int) -> None:
+    def clear_cart(self, user_id: int, commit: bool = True) -> None:
         self.db.query(CartItem).filter(CartItem.user_id == user_id).delete()
-        self.db.commit()
+        if commit:
+            self.db.commit()
 
     # Wishlist operations
     def get_user_wishlist(self, user_id: int) -> List[WishlistItem]:

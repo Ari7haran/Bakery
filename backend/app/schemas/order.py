@@ -1,18 +1,18 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Optional
 from datetime import datetime
 from app.schemas.product import ProductOut
 
 class OrderItemInput(BaseModel):
     product_id: int
-    quantity: int = 1
+    quantity: int = Field(1, gt=0, description="Quantity must be greater than zero")
 
 class OrderItemOut(BaseModel):
     id: int
     product_id: int
     quantity: int
     price: float
-    product: ProductOut
+    product: Optional[ProductOut] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -51,4 +51,4 @@ class OrderStatusUpdate(BaseModel):
     status: str
 
 class PaymentStatusUpdate(BaseModel):
-    payment_status: str
+    payment_status: str = Field(..., description="Payment status: Pending, Paid, or Failed")

@@ -1,5 +1,5 @@
 from typing import Optional, List, Dict, Any
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from app.repositories.base_repository import BaseRepository
 from app.models.order import Order, OrderItem
@@ -9,14 +9,38 @@ class OrderRepository(BaseRepository[Order]):
     def __init__(self, db: Session):
         super().__init__(Order, db)
 
+    def get_by_id(self, id: int) -> Optional[Order]:
+        return (
+            self.db.query(Order)
+            .options(joinedload(Order.items).joinedload(OrderItem.product))
+            .filter(Order.id == id)
+            .first()
+        )
+
     def get_by_order_number(self, order_number: str) -> Optional[Order]:
-        return self.db.query(Order).filter(Order.order_number == order_number).first()
+        return (
+            self.db.query(Order)
+            .options(joinedload(Order.items).joinedload(OrderItem.product))
+            .filter(Order.order_number == order_number)
+            .first()
+        )
 
     def list_by_user(self, user_id: int) -> List[Order]:
-        return self.db.query(Order).filter(Order.user_id == user_id).order_by(Order.created_at.desc()).all()
+        return (
+            self.db.query(Order)
+            .options(joinedload(Order.items).joinedload(OrderItem.product))
+            .filter(Order.user_id == user_id)
+            .order_by(Order.created_at.desc())
+            .all()
+        )
 
     def list_all_ordered(self) -> List[Order]:
-        return self.db.query(Order).order_by(Order.created_at.desc()).all()
+        return (
+            self.db.query(Order)
+            .options(joinedload(Order.items).joinedload(OrderItem.product))
+            .order_by(Order.created_at.desc())
+            .all()
+        )
 
     def create_order_with_items(self, order: Order, items: List[OrderItem]) -> Order:
         self.db.add(order)

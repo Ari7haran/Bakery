@@ -30,10 +30,7 @@ class CouponService:
         )
 
     def calculate_discount(self, code: str, order_amount: float) -> float:
-        if not code:
+        if not code or not code.strip():
             return 0.0
-        try:
-            res = self.validate_coupon(code, order_amount)
-            return res.discount_amount
-        except BusinessRuleError:
-            return 0.0
+        res = self.validate_coupon(code.strip(), order_amount)
+        return res.discount_amount

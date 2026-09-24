@@ -56,3 +56,11 @@ def get_order_by_id(
     service: OrderService = Depends(get_order_service)
 ):
     return service.get_order_by_id(current_user, order_id)
+
+@router.post("/{order_id}/cancel", response_model=OrderOut)
+def cancel_order(
+    order_id: int,
+    current_user: User = Depends(get_current_user),
+    service: OrderService = Depends(get_order_service)
+):
+    return service.cancel_order(current_user, order_id)
