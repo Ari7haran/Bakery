@@ -21,6 +21,10 @@ class ResourceNotFoundError(AppException):
     status_code = status.HTTP_404_NOT_FOUND
     detail = "The requested resource was not found."
 
+class ValidationError(AppException):
+    status_code = 422
+    detail = "Validation error."
+
 class BusinessRuleError(AppException):
     status_code = status.HTTP_400_BAD_REQUEST
     detail = "A business rule validation failed."

@@ -3,7 +3,7 @@ from app.repositories.product_repository import ProductRepository
 from app.repositories.category_repository import CategoryRepository
 from app.repositories.banner_repository import BannerRepository
 from app.repositories.review_repository import ReviewRepository
-from app.core.exceptions import ResourceNotFoundError, BusinessRuleError
+from app.core.exceptions import ResourceNotFoundError, BusinessRuleError, ValidationError
 from app.models.product import Product
 from app.models.category import Category
 from app.models.banner import Banner
@@ -27,25 +27,48 @@ class ProductService:
     def list_products(
         self,
         category_slug: Optional[str] = None,
+        category_id: Optional[int] = None,
         search: Optional[str] = None,
         is_veg: Optional[bool] = None,
         is_featured: Optional[bool] = None,
         is_todays_fresh: Optional[bool] = None,
         is_popular: Optional[bool] = None,
+        in_stock: Optional[bool] = None,
         min_price: Optional[float] = None,
         max_price: Optional[float] = None,
         sort_by: Optional[str] = "popular",
+        skip: int = 0,
+        limit: Optional[int] = None,
     ) -> List[Product]:
+        if min_price is not None and min_price < 0:
+            raise ValidationError("min_price cannot be negative")
+        if max_price is not None and max_price < 0:
+            raise ValidationError("max_price cannot be negative")
+        if min_price is not None and max_price is not None and min_price > max_price:
+            raise ValidationError("min_price cannot be greater than max_price")
+        if skip < 0:
+            raise ValidationError("skip cannot be negative")
+        if limit is not None and limit < 1:
+            raise ValidationError("limit must be greater than zero")
+
+        clean_search = search.strip() if search else None
+        if not clean_search:
+            clean_search = None
+
         return self.product_repo.list_products(
             category_slug=category_slug,
-            search=search,
+            category_id=category_id,
+            search=clean_search,
             is_veg=is_veg,
             is_featured=is_featured,
             is_todays_fresh=is_todays_fresh,
             is_popular=is_popular,
+            in_stock=in_stock,
             min_price=min_price,
             max_price=max_price,
             sort_by=sort_by,
+            skip=skip,
+            limit=limit,
         )
 
     def get_product(self, product_id: int) -> Product:

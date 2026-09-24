@@ -1,4 +1,5 @@
 from typing import List, Optional
+from enum import Enum
 from fastapi import APIRouter, Depends, Query, Path
 from sqlalchemy.orm import Session
 
@@ -14,6 +15,15 @@ from app.schemas.banner import BannerOut
 
 router = APIRouter(tags=["Products & Categories"])
 
+class ProductSortOption(str, Enum):
+    popular = "popular"
+    price_asc = "price_asc"
+    price_desc = "price_desc"
+    name_asc = "name_asc"
+    name_desc = "name_desc"
+    rating = "rating"
+    newest = "newest"
+
 def get_product_service(db: Session = Depends(get_db)) -> ProductService:
     return ProductService(
         product_repo=ProductRepository(db),
@@ -28,27 +38,38 @@ def get_categories(service: ProductService = Depends(get_product_service)):
 
 @router.get("/products", response_model=List[ProductOut])
 def get_products(
-    category_slug: Optional[str] = None,
-    search: Optional[str] = None,
-    is_veg: Optional[bool] = None,
-    is_featured: Optional[bool] = None,
-    is_todays_fresh: Optional[bool] = None,
-    is_popular: Optional[bool] = None,
-    min_price: Optional[float] = None,
-    max_price: Optional[float] = None,
-    sort_by: Optional[str] = Query("popular", enum=["popular", "price_asc", "price_desc", "rating", "newest"]),
+    category_slug: Optional[str] = Query(None, description="Filter by category slug"),
+    category_id: Optional[int] = Query(None, gt=0, description="Filter by category ID (must be > 0)"),
+    search: Optional[str] = Query(None, max_length=100, description="Search term for name, description, or category"),
+    q: Optional[str] = Query(None, max_length=100, description="Search term alias"),
+    is_veg: Optional[bool] = Query(None, description="Filter vegetarian products"),
+    is_featured: Optional[bool] = Query(None, description="Filter featured products"),
+    is_todays_fresh: Optional[bool] = Query(None, description="Filter today's fresh products"),
+    is_popular: Optional[bool] = Query(None, description="Filter popular products"),
+    in_stock: Optional[bool] = Query(None, description="Filter by stock availability (True = in stock, False = out of stock)"),
+    min_price: Optional[float] = Query(None, ge=0, description="Minimum price (must be >= 0)"),
+    max_price: Optional[float] = Query(None, ge=0, description="Maximum price (must be >= 0)"),
+    sort_by: Optional[ProductSortOption] = Query(ProductSortOption.popular, description="Sort order for products"),
+    skip: int = Query(0, ge=0, description="Number of items to skip"),
+    limit: Optional[int] = Query(100, ge=1, le=100, description="Maximum items to return"),
     service: ProductService = Depends(get_product_service)
 ):
+    effective_search = search if search is not None else q
+    sort_val = sort_by.value if isinstance(sort_by, ProductSortOption) else (sort_by or "popular")
     return service.list_products(
         category_slug=category_slug,
-        search=search,
+        category_id=category_id,
+        search=effective_search,
         is_veg=is_veg,
         is_featured=is_featured,
         is_todays_fresh=is_todays_fresh,
         is_popular=is_popular,
+        in_stock=in_stock,
         min_price=min_price,
         max_price=max_price,
-        sort_by=sort_by
+        sort_by=sort_val,
+        skip=skip,
+        limit=limit,
     )
 
 @router.get("/products/recommendations/{product_id}", response_model=List[ProductOut])
