@@ -18,3 +18,16 @@ api.interceptors.request.use((config) => {
 }, (error) => {
   return Promise.reject(error);
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      const isAuthEndpoint = error.config?.url?.includes('/auth/login') || error.config?.url?.includes('/auth/register');
+      if (!isAuthEndpoint) {
+        localStorage.removeItem('sweet_crumbs_token');
+      }
+    }
+    return Promise.reject(error);
+  }
+);

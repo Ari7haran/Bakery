@@ -24,9 +24,18 @@ def create_access_token(subject: str | Any, expires_delta: Optional[timedelta] =
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
+# Constant dummy bcrypt hash for timing attack mitigation during non-existent user login
+DUMMY_BCRYPT_HASH = "$2b$12$e80yE6wI74L8Y1jE6zU1e.yF9O1E2x3z4a5b6c7d8e9f0g1h2i3j4"
+
+def dummy_verify_password(plain_password: str = "dummy_password") -> bool:
+    """Executes a standard bcrypt verify to ensure constant-time response when user is not found."""
+    return verify_password(plain_password, DUMMY_BCRYPT_HASH)
+
 def decode_token(token: str) -> Optional[dict]:
+    if not token or not isinstance(token, str):
+        return None
     try:
         decoded = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         return decoded
-    except JWTError:
+    except (JWTError, Exception):
         return None
