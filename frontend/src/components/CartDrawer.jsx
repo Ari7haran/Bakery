@@ -20,21 +20,29 @@ const CartDrawer = () => {
 
   const [couponCode, setCouponCode] = useState('');
   const [couponError, setCouponError] = useState('');
+  const [couponSuccess, setCouponSuccess] = useState('');
+  const [isApplying, setIsApplying] = useState(false);
 
   if (!isCartOpen) return null;
 
   const finalTotal = Math.max(0, totalAmount - discountAmount);
 
-  const handleApplyCoupon = async (e) => {
-    e.preventDefault();
+  const handleApplyCoupon = async (e, codeToUse = null) => {
+    if (e) e.preventDefault();
     setCouponError('');
-    if (!couponCode.trim()) return;
+    setCouponSuccess('');
+    const targetCode = codeToUse || couponCode;
+    if (!targetCode || !targetCode.trim()) return;
 
-    const success = await applyCoupon(couponCode);
-    if (!success) {
-      setCouponError('Invalid coupon code or order amount too low.');
-    } else {
+    setIsApplying(true);
+    const result = await applyCoupon(targetCode.trim());
+    setIsApplying(false);
+
+    if (result && result.success) {
+      setCouponSuccess(result.message || 'Coupon applied successfully!');
       setCouponCode('');
+    } else {
+      setCouponError(result?.message || 'Invalid coupon code or order amount too low.');
     }
   };
 
@@ -150,34 +158,60 @@ const CartDrawer = () => {
           {/* Footer & Checkout */}
           {cart.length > 0 && (
             <div className="p-4 sm:p-6 border-t border-amber-900/10 dark:border-amber-500/10 bg-white dark:bg-amber-950/50 space-y-3">
-              {/* Coupon Form */}
+              {/* Coupon Form & Offers */}
               {appliedCoupon ? (
-                <div className="flex items-center justify-between bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 p-2.5 rounded-xl border border-emerald-200 text-xs font-semibold">
-                  <div className="flex items-center gap-1.5">
-                    <Tag className="w-4 h-4" />
-                    <span>Coupon <strong>{appliedCoupon.code}</strong> Applied (-₹{appliedCoupon.discountAmount})</span>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 p-2.5 rounded-xl border border-emerald-200 text-xs font-semibold">
+                    <div className="flex items-center gap-1.5">
+                      <Tag className="w-4 h-4 text-emerald-600" />
+                      <span>Coupon <strong>{appliedCoupon.code}</strong> Applied (-₹{discountAmount})</span>
+                    </div>
+                    <button onClick={removeCoupon} className="text-red-500 hover:underline text-[10px] font-bold">Remove</button>
                   </div>
-                  <button onClick={removeCoupon} className="text-red-500 hover:underline text-[10px]">Remove</button>
+                  {appliedCoupon.minOrderAmount && totalAmount < appliedCoupon.minOrderAmount && (
+                    <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                      Add ₹{(appliedCoupon.minOrderAmount - totalAmount).toFixed(0)} more to activate this discount.
+                    </p>
+                  )}
                 </div>
               ) : (
-                <form onSubmit={handleApplyCoupon} className="space-y-1">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Coupon Code (e.g. WELCOME100)"
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value)}
-                      className="flex-1 px-3 py-1.5 text-xs rounded-xl border border-amber-900/20 dark:border-amber-500/20 bg-cream-50 dark:bg-amber-900/20 uppercase"
-                    />
-                    <button
-                      type="submit"
-                      className="px-3 py-1.5 bg-bakery-brown text-white text-xs font-bold rounded-xl hover:bg-bakery-orange transition"
-                    >
-                      Apply
-                    </button>
+                <div className="space-y-2">
+                  <form onSubmit={handleApplyCoupon} className="space-y-1">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Coupon Code (e.g. WELCOME100)"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value)}
+                        className="flex-1 px-3 py-1.5 text-xs rounded-xl border border-amber-900/20 dark:border-amber-500/20 bg-cream-50 dark:bg-amber-900/20 uppercase focus:outline-none"
+                      />
+                      <button
+                        type="submit"
+                        disabled={isApplying}
+                        className="px-3.5 py-1.5 bg-bakery-brown text-white text-xs font-bold rounded-xl hover:bg-bakery-orange transition disabled:opacity-50"
+                      >
+                        {isApplying ? 'Checking...' : 'Apply'}
+                      </button>
+                    </div>
+                    {couponError && <p className="text-[10px] text-red-500">{couponError}</p>}
+                    {couponSuccess && <p className="text-[10px] text-emerald-600 font-medium">{couponSuccess}</p>}
+                  </form>
+
+                  {/* Available Bakery Offers */}
+                  <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                    <span className="text-[10px] text-gray-400 font-medium">Offers:</span>
+                    {['WELCOME100', 'SWEET50', 'FESTIVE25'].map((code) => (
+                      <button
+                        key={code}
+                        type="button"
+                        onClick={() => handleApplyCoupon(null, code)}
+                        className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 text-bakery-orange border border-amber-200 dark:border-amber-800 hover:bg-bakery-orange hover:text-white transition"
+                      >
+                        {code}
+                      </button>
+                    ))}
                   </div>
-                  {couponError && <p className="text-[10px] text-red-500">{couponError}</p>}
-                </form>
+                </div>
               )}
 
               {/* Price Calculation */}

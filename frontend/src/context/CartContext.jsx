@@ -87,28 +87,28 @@ export const CartProvider = ({ children }) => {
   }, 0);
 
   const applyCoupon = async (code) => {
+    if (!code || !code.trim()) {
+      return { success: false, message: 'Please enter a coupon code.' };
+    }
     try {
-      const res = await api.post('/user/coupon/validate', {
-        code,
+      const res = await api.post('/coupons/validate', {
+        code: code.trim(),
         order_amount: totalAmount
       });
-      if (res.data.valid) {
+      if (res.data && res.data.valid) {
         setAppliedCoupon({
           code: res.data.code,
           discountPercent: res.data.discount_percent,
-          discountAmount: res.data.discount_amount
+          discountAmount: res.data.discount_amount,
+          minOrderAmount: res.data.min_order_amount,
+          maxDiscountAmount: res.data.max_discount_amount
         });
-        return true;
+        return { success: true, message: res.data.message || 'Coupon applied successfully!' };
       }
-      return false;
-    } catch {
-      // Fallback offline validation for demo
-      if (code.toUpperCase() === 'WELCOME100' && totalAmount >= 300) {
-        const discount = Math.min((totalAmount * 20) / 100, 100);
-        setAppliedCoupon({ code: 'WELCOME100', discountPercent: 20, discountAmount: discount });
-        return true;
-      }
-      return false;
+      return { success: false, message: 'Invalid or expired coupon code.' };
+    } catch (err) {
+      const message = err.response?.data?.detail || 'Invalid or expired coupon code.';
+      return { success: false, message };
     }
   };
 
@@ -116,7 +116,14 @@ export const CartProvider = ({ children }) => {
     setAppliedCoupon(null);
   };
 
-  const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+  const discountAmount = appliedCoupon
+    ? (totalAmount >= (appliedCoupon.minOrderAmount || 0)
+        ? Math.min(
+            Math.round(((totalAmount * (appliedCoupon.discountPercent || 0)) / 100) * 100) / 100,
+            appliedCoupon.maxDiscountAmount || appliedCoupon.discountAmount
+          )
+        : 0)
+    : 0;
 
   return (
     <CartContext.Provider

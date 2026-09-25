@@ -11,7 +11,13 @@ from app.schemas.order import (
     OrderStatusUpdate,
     PaymentStatusUpdate,
 )
-from app.schemas.coupon import CouponApply, CouponOut, CouponValidationResult
+from app.schemas.coupon import (
+    CouponApply,
+    CouponCreate,
+    CouponUpdate,
+    CouponOut,
+    CouponValidationResult,
+)
 from app.schemas.review import (
     ReviewCreate,
     ReviewUpdate,
@@ -44,6 +50,8 @@ __all__ = [
     "OrderStatusUpdate",
     "PaymentStatusUpdate",
     "CouponApply",
+    "CouponCreate",
+    "CouponUpdate",
     "CouponOut",
     "CouponValidationResult",
     "ReviewCreate",

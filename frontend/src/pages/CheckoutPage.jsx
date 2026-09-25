@@ -7,7 +7,7 @@ import { api } from '../services/api.js';
 import PickupModal from '../components/PickupModal.jsx';
 
 const CheckoutPage = () => {
-  const { cart, totalAmount, discountAmount, appliedCoupon, pickupSlot, clearCart } = useCart();
+  const { cart, totalAmount, discountAmount, appliedCoupon, applyCoupon, removeCoupon, pickupSlot, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -22,8 +22,28 @@ const CheckoutPage = () => {
   const [address, setAddress] = useState('123 Main Street, Apt 4B, City');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
+  const [checkoutCouponCode, setCheckoutCouponCode] = useState('');
+  const [checkoutCouponError, setCheckoutCouponError] = useState('');
+  const [checkoutCouponSuccess, setCheckoutCouponSuccess] = useState('');
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 
   const finalTotal = Math.max(0, totalAmount - discountAmount);
+
+  const handleApplyCheckoutCoupon = async (codeToUse = null) => {
+    const code = codeToUse || checkoutCouponCode;
+    if (!code || !code.trim()) return;
+    setCheckoutCouponError('');
+    setCheckoutCouponSuccess('');
+    setIsApplyingCoupon(true);
+    const res = await applyCoupon(code.trim());
+    setIsApplyingCoupon(false);
+    if (res && res.success) {
+      setCheckoutCouponSuccess(res.message);
+      setCheckoutCouponCode('');
+    } else {
+      setCheckoutCouponError(res?.message || 'Invalid coupon code or order amount too low.');
+    }
+  };
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
@@ -285,10 +305,62 @@ const CheckoutPage = () => {
               })}
             </div>
 
-            {appliedCoupon && (
-              <div className="flex justify-between text-xs text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/50 p-2 rounded-xl">
-                <span>Coupon ({appliedCoupon.code})</span>
-                <span>-₹{discountAmount}</span>
+            {/* Coupon / Promo Code Section */}
+            {appliedCoupon ? (
+              <div className="space-y-1.5 pt-2 border-t border-amber-900/10">
+                <div className="flex justify-between items-center text-xs text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/50 p-2.5 rounded-xl border border-emerald-200">
+                  <span>Coupon ({appliedCoupon.code})</span>
+                  <div className="flex items-center gap-2">
+                    <span>-₹{discountAmount}</span>
+                    <button
+                      type="button"
+                      onClick={removeCoupon}
+                      className="text-red-500 hover:underline text-[10px] font-bold"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+                {appliedCoupon.minOrderAmount && totalAmount < appliedCoupon.minOrderAmount && (
+                  <p className="text-[10px] text-amber-600 font-medium">
+                    Add ₹{(appliedCoupon.minOrderAmount - totalAmount).toFixed(0)} more to activate discount.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2 pt-2 border-t border-amber-900/10">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Promo Code"
+                    value={checkoutCouponCode}
+                    onChange={(e) => setCheckoutCouponCode(e.target.value)}
+                    className="flex-1 px-3 py-1.5 text-xs rounded-xl border border-amber-900/20 bg-cream-50 dark:bg-amber-900/20 uppercase focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleApplyCheckoutCoupon()}
+                    disabled={isApplyingCoupon}
+                    className="px-3.5 py-1.5 bg-bakery-brown text-white text-xs font-bold rounded-xl hover:bg-bakery-orange transition disabled:opacity-50"
+                  >
+                    {isApplyingCoupon ? 'Applying...' : 'Apply'}
+                  </button>
+                </div>
+                {checkoutCouponError && <p className="text-[10px] text-red-500">{checkoutCouponError}</p>}
+                {checkoutCouponSuccess && <p className="text-[10px] text-emerald-600 font-medium">{checkoutCouponSuccess}</p>}
+                <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                  <span className="text-[10px] text-gray-400">Offers:</span>
+                  {['WELCOME100', 'SWEET50', 'FESTIVE25'].map((code) => (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={() => handleApplyCheckoutCoupon(code)}
+                      className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 text-bakery-orange border border-amber-200 dark:border-amber-800 hover:bg-bakery-orange hover:text-white transition"
+                    >
+                      {code}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
