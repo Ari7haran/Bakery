@@ -3,7 +3,7 @@ from app.repositories.product_repository import ProductRepository
 from app.repositories.category_repository import CategoryRepository
 from app.repositories.banner_repository import BannerRepository
 from app.repositories.review_repository import ReviewRepository
-from app.core.exceptions import ResourceNotFoundError, BusinessRuleError, ValidationError
+from app.core.exceptions import ResourceNotFoundError, BusinessRuleError, ValidationError, ConflictError
 from app.models.product import Product
 from app.models.category import Category
 from app.models.banner import Banner
@@ -155,27 +155,40 @@ class ProductService:
         self.product_repo.delete(product)
 
     def get_reviews(self, product_id: int) -> List[Review]:
+        if product_id <= 0:
+            raise ResourceNotFoundError(f"Product with id {product_id} not found")
+        product = self.product_repo.get_by_id(product_id)
+        if not product:
+            raise ResourceNotFoundError(f"Product with id {product_id} not found")
         return self.review_repo.list_by_product(product_id)
 
     def add_review(self, user_id: int, review_in: ReviewCreate) -> Review:
+        if not review_in.product_id or review_in.product_id <= 0:
+            raise ResourceNotFoundError("Valid product ID is required")
         product = self.product_repo.get_by_id(review_in.product_id)
         if not product:
-            raise ResourceNotFoundError("Product not found")
+            raise ResourceNotFoundError(f"Product with id {review_in.product_id} not found")
+
+        existing = self.review_repo.get_by_user_and_product(user_id, review_in.product_id)
+        if existing:
+            raise ConflictError("You have already reviewed this product.")
 
         review = Review(
             product_id=review_in.product_id,
             user_id=user_id,
             rating=review_in.rating,
-            comment=review_in.comment
+            comment=(review_in.comment or "").strip()
         )
         self.review_repo.db.add(review)
+        self.review_repo.db.flush()
 
-        # Recalculate average rating
-        all_reviews = self.review_repo.list_by_product(review_in.product_id)
-        total_ratings = sum(r.rating for r in all_reviews) + review_in.rating
-        cnt = len(all_reviews) + 1
-        product.rating = round(total_ratings / cnt, 1)
-        product.review_count = cnt
+        all_reviews = self.review_repo.get_all_for_product(review_in.product_id)
+        if all_reviews:
+            product.review_count = len(all_reviews)
+            product.rating = round(sum(r.rating for r in all_reviews) / len(all_reviews), 2)
+        else:
+            product.review_count = 0
+            product.rating = 0.0
 
         self.review_repo.db.commit()
         self.review_repo.db.refresh(review)

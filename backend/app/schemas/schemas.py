@@ -26,7 +26,10 @@ from app.schemas import (
     CouponOut,
     CouponValidationResult,
     ReviewCreate,
+    ReviewUpdate,
     ReviewOut,
+    ReviewUserOut,
+    ReviewSortOption,
     AnalyticsOut,
     BannerOut,
 )
@@ -55,7 +58,10 @@ __all__ = [
     "CouponOut",
     "CouponValidationResult",
     "ReviewCreate",
+    "ReviewUpdate",
     "ReviewOut",
+    "ReviewUserOut",
+    "ReviewSortOption",
     "AnalyticsOut",
     "BannerOut",
 ]

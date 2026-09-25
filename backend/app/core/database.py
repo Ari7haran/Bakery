@@ -62,6 +62,7 @@ def init_db_indexes(bind_engine):
         "CREATE INDEX IF NOT EXISTS ix_addresses_user_id ON addresses (user_id);",
         "CREATE INDEX IF NOT EXISTS ix_reviews_product_id ON reviews (product_id);",
         "CREATE INDEX IF NOT EXISTS ix_reviews_user_id ON reviews (user_id);",
+        "CREATE INDEX IF NOT EXISTS ix_reviews_created_at ON reviews (created_at);",
         "CREATE UNIQUE INDEX IF NOT EXISTS uq_review_user_product ON reviews (user_id, product_id);",
     ]
     with bind_engine.connect() as conn:
