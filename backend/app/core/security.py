@@ -1,6 +1,6 @@
 import bcrypt
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Any
+from typing import Optional, Any, Union
 from jose import jwt, JWTError
 from app.core.config import settings
 
@@ -14,7 +14,7 @@ def get_password_hash(password: str) -> str:
     salt = bcrypt.gensalt()
     return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
 
-def create_access_token(subject: str | Any, expires_delta: Optional[timedelta] = None, role: str = "customer") -> str:
+def create_access_token(subject: Union[str, Any], expires_delta: Optional[timedelta] = None, role: str = "customer") -> str:
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:

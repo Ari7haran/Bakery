@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Dict
 from sqlalchemy import func, or_, and_, case
 from sqlalchemy.orm import Session
 from app.repositories.base_repository import BaseRepository
