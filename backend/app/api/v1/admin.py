@@ -1,5 +1,5 @@
-from typing import List
-from fastapi import APIRouter, Depends
+from typing import List, Optional
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -20,7 +20,12 @@ from app.services.product_service import ProductService
 from app.services.coupon_service import CouponService
 from app.services.payment_service import PaymentService
 from app.services.notification_service import NotificationService
-from app.schemas.analytics import AnalyticsOut
+from app.schemas.analytics import (
+    AnalyticsOut,
+    InventoryMetrics,
+    OrderMetrics,
+    CustomerMetrics,
+)
 from app.schemas.order import OrderOut, OrderStatusUpdate
 from app.schemas.product import ProductOut, ProductBase, ProductStockUpdate
 from app.schemas.user import UserOut
@@ -30,7 +35,9 @@ router = APIRouter(prefix="/admin", tags=["Admin Dashboard & Management"])
 def get_admin_service(db: Session = Depends(get_db)) -> AdminService:
     return AdminService(
         order_repo=OrderRepository(db),
-        user_repo=UserRepository(db)
+        user_repo=UserRepository(db),
+        product_repo=ProductRepository(db),
+        db=db
     )
 
 def get_notification_service(db: Session = Depends(get_db)) -> NotificationService:
@@ -80,11 +87,45 @@ def get_payment_service(
     return PaymentService(OrderRepository(db), notification_service=notif_service)
 
 @router.get("/analytics", response_model=AnalyticsOut)
+@router.get("/analytics/overview", response_model=AnalyticsOut)
 def get_analytics(
+    period: str = Query("7d", description="Time period: today, 7d, 30d, this_month, all, custom"),
+    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD) for custom period"),
+    end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD) for custom period"),
     admin: User = Depends(get_current_admin),
     service: AdminService = Depends(get_admin_service)
 ):
-    return service.get_analytics()
+    return service.get_analytics(period=period, start_date=start_date, end_date=end_date)
+
+@router.get("/analytics/inventory", response_model=InventoryMetrics)
+def get_inventory_analytics(
+    admin: User = Depends(get_current_admin),
+    service: AdminService = Depends(get_admin_service)
+):
+    res = service.get_analytics(period="all")
+    return res["inventory_metrics"]
+
+@router.get("/analytics/orders", response_model=OrderMetrics)
+def get_orders_analytics(
+    period: str = Query("7d"),
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    admin: User = Depends(get_current_admin),
+    service: AdminService = Depends(get_admin_service)
+):
+    res = service.get_analytics(period=period, start_date=start_date, end_date=end_date)
+    return res["order_metrics"]
+
+@router.get("/analytics/customers", response_model=CustomerMetrics)
+def get_customers_analytics(
+    period: str = Query("7d"),
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    admin: User = Depends(get_current_admin),
+    service: AdminService = Depends(get_admin_service)
+):
+    res = service.get_analytics(period=period, start_date=start_date, end_date=end_date)
+    return res["customer_metrics"]
 
 @router.get("/orders", response_model=List[OrderOut])
 def get_all_orders(

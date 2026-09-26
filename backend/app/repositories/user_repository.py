@@ -1,4 +1,5 @@
 from typing import Optional, List
+from datetime import datetime
 from sqlalchemy.orm import Session
 from app.repositories.base_repository import BaseRepository
 from app.models.user import User
@@ -36,3 +37,6 @@ class UserRepository(BaseRepository[User]):
 
     def get_admins(self) -> List[User]:
         return self.db.query(User).filter(User.role == "admin", User.is_active == True).all()
+
+    def count_new_customers(self, start_date: datetime) -> int:
+        return self.db.query(User).filter(User.role == "customer", User.created_at >= start_date).count()

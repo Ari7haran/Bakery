@@ -25,7 +25,17 @@ from app.schemas.review import (
     ReviewUserOut,
     ReviewSortOption,
 )
-from app.schemas.analytics import AnalyticsOut
+from app.schemas.analytics import (
+    AnalyticsOut,
+    OrderStatusBreakdown,
+    OrderMetrics,
+    RevenueMetrics,
+    InventoryMetrics,
+    InventoryAttentionItem,
+    CustomerMetrics,
+    TopCustomerItem,
+    ChartDataPoint,
+)
 from app.schemas.banner import BannerOut
 from app.schemas.notification import (
     NotificationBase,
@@ -68,6 +78,14 @@ __all__ = [
     "ReviewUserOut",
     "ReviewSortOption",
     "AnalyticsOut",
+    "OrderStatusBreakdown",
+    "OrderMetrics",
+    "RevenueMetrics",
+    "InventoryMetrics",
+    "InventoryAttentionItem",
+    "CustomerMetrics",
+    "TopCustomerItem",
+    "ChartDataPoint",
     "BannerOut",
     "NotificationBase",
     "NotificationCreate",

@@ -244,3 +244,24 @@ class ProductRepository(BaseRepository[Product]):
         self.db.commit()
         self.db.refresh(product)
         return product
+
+    def count_by_stock_status(self) -> Dict[str, int]:
+        total = self.db.query(func.count(Product.id)).scalar() or 0
+        out_of_stock = self.db.query(func.count(Product.id)).filter(Product.stock_quantity == 0).scalar() or 0
+        low_stock = self.db.query(func.count(Product.id)).filter(Product.stock_quantity > 0, Product.stock_quantity <= 5).scalar() or 0
+        in_stock = self.db.query(func.count(Product.id)).filter(Product.stock_quantity > 5).scalar() or 0
+        return {
+            "total": total,
+            "out_of_stock": out_of_stock,
+            "low_stock": low_stock,
+            "in_stock": in_stock,
+        }
+
+    def get_low_stock_products(self, threshold: int = 5, limit: int = 20) -> List[Product]:
+        return (
+            self.db.query(Product)
+            .filter(Product.stock_quantity <= threshold)
+            .order_by(Product.stock_quantity.asc())
+            .limit(limit)
+            .all()
+        )
