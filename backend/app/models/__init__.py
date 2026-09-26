@@ -13,6 +13,7 @@ from app.models.order import (
 from app.models.coupon import Coupon
 from app.models.review import Review
 from app.models.banner import Banner
+from app.models.notification import Notification, NotificationTypeEnum, NotificationPriorityEnum
 
 __all__ = [
     "User",
@@ -32,4 +33,7 @@ __all__ = [
     "Coupon",
     "Review",
     "Banner",
+    "Notification",
+    "NotificationTypeEnum",
+    "NotificationPriorityEnum",
 ]

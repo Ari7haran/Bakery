@@ -13,11 +13,13 @@ from app.repositories.banner_repository import BannerRepository
 from app.repositories.review_repository import ReviewRepository
 from app.repositories.cart_repository import CartRepository
 from app.repositories.coupon_repository import CouponRepository
+from app.repositories.notification_repository import NotificationRepository
 from app.services.admin_service import AdminService
 from app.services.order_service import OrderService
 from app.services.product_service import ProductService
 from app.services.coupon_service import CouponService
 from app.services.payment_service import PaymentService
+from app.services.notification_service import NotificationService
 from app.schemas.analytics import AnalyticsOut
 from app.schemas.order import OrderOut, OrderStatusUpdate
 from app.schemas.product import ProductOut, ProductBase, ProductStockUpdate
@@ -31,13 +33,23 @@ def get_admin_service(db: Session = Depends(get_db)) -> AdminService:
         user_repo=UserRepository(db)
     )
 
-def get_order_service(db: Session = Depends(get_db)) -> OrderService:
+def get_notification_service(db: Session = Depends(get_db)) -> NotificationService:
+    return NotificationService(
+        notification_repo=NotificationRepository(db),
+        user_repo=UserRepository(db),
+        db=db
+    )
+
+def get_order_service(
+    db: Session = Depends(get_db),
+    notif_service: NotificationService = Depends(get_notification_service)
+) -> OrderService:
     order_repo = OrderRepository(db)
     product_repo = ProductRepository(db)
     cart_repo = CartRepository(db)
     user_repo = UserRepository(db)
     coupon_service = CouponService(CouponRepository(db))
-    payment_service = PaymentService(order_repo)
+    payment_service = PaymentService(order_repo, notification_service=notif_service)
     return OrderService(
         order_repo=order_repo,
         product_repo=product_repo,
@@ -45,19 +57,27 @@ def get_order_service(db: Session = Depends(get_db)) -> OrderService:
         user_repo=user_repo,
         coupon_service=coupon_service,
         payment_service=payment_service,
-        db=db
+        db=db,
+        notification_service=notif_service
     )
 
-def get_product_service(db: Session = Depends(get_db)) -> ProductService:
+def get_product_service(
+    db: Session = Depends(get_db),
+    notif_service: NotificationService = Depends(get_notification_service)
+) -> ProductService:
     return ProductService(
         product_repo=ProductRepository(db),
         category_repo=CategoryRepository(db),
         banner_repo=BannerRepository(db),
-        review_repo=ReviewRepository(db)
+        review_repo=ReviewRepository(db),
+        notification_service=notif_service
     )
 
-def get_payment_service(db: Session = Depends(get_db)) -> PaymentService:
-    return PaymentService(OrderRepository(db))
+def get_payment_service(
+    db: Session = Depends(get_db),
+    notif_service: NotificationService = Depends(get_notification_service)
+) -> PaymentService:
+    return PaymentService(OrderRepository(db), notification_service=notif_service)
 
 @router.get("/analytics", response_model=AnalyticsOut)
 def get_analytics(

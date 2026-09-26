@@ -7,6 +7,7 @@ from app.repositories.order_repository import OrderRepository
 from app.repositories.coupon_repository import CouponRepository
 from app.repositories.review_repository import ReviewRepository
 from app.repositories.banner_repository import BannerRepository
+from app.repositories.notification_repository import NotificationRepository
 
 __all__ = [
     "BaseRepository",
@@ -18,4 +19,5 @@ __all__ = [
     "CouponRepository",
     "ReviewRepository",
     "BannerRepository",
+    "NotificationRepository",
 ]

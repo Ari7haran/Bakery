@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 
 from app.core.database import Base, get_db
 from app.core.security import get_password_hash, create_access_token
-from app.models import User, Category, Product, Coupon, RoleEnum
+from app.models import User, Category, Product, Coupon, RoleEnum, Notification
 from app.main import app
 
 # Create completely isolated in-memory SQLite engine for testing

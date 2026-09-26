@@ -10,6 +10,7 @@ from app.models.banner import Banner
 from app.models.review import Review
 from app.schemas.product import ProductBase
 from app.schemas.review import ReviewCreate
+from app.services.notification_service import NotificationService
 
 class ProductService:
     def __init__(
@@ -17,12 +18,14 @@ class ProductService:
         product_repo: ProductRepository,
         category_repo: CategoryRepository,
         banner_repo: BannerRepository,
-        review_repo: ReviewRepository
+        review_repo: ReviewRepository,
+        notification_service: Optional["NotificationService"] = None
     ):
         self.product_repo = product_repo
         self.category_repo = category_repo
         self.banner_repo = banner_repo
         self.review_repo = review_repo
+        self.notification_service = notification_service
 
     def list_products(
         self,
@@ -146,6 +149,10 @@ class ProductService:
         product.stock_quantity = stock_quantity
         self.product_repo.db.commit()
         self.product_repo.db.refresh(product)
+
+        if self.notification_service and stock_quantity <= 5:
+            self.notification_service.notify_low_stock(product, threshold=5, commit=True)
+
         return product
 
     def delete_product(self, product_id: int) -> None:

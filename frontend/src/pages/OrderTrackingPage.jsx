@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { QrCode, ArrowLeft, RefreshCw } from 'lucide-react';
 import { api } from '../services/api.js';
+import { useToast } from '../context/ToastContext.jsx';
 
 const statusSteps = [
   { status: 'Received', label: 'Order Received', icon: '📝' },
@@ -15,6 +16,8 @@ const statusSteps = [
 const OrderTrackingPage = () => {
   const [searchParams] = useSearchParams();
   const orderId = searchParams.get('orderId');
+  const toast = useToast();
+  const previousStatusRef = useRef(null);
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -28,7 +31,25 @@ const OrderTrackingPage = () => {
     setLoading(true);
     try {
       const res = await api.get(`/orders/${orderId}`);
-      setOrder(res.data);
+      const updatedOrder = res.data;
+
+      // Detect status change and display toast without duplicate alerts
+      if (previousStatusRef.current && previousStatusRef.current !== updatedOrder.status) {
+        if (updatedOrder.status === 'Ready for Pickup') {
+          toast.success(
+            `Order #${updatedOrder.order_number} is hot & ready at the counter! ✨`,
+            'Ready for Pickup'
+          );
+        } else {
+          toast.info(
+            `Order #${updatedOrder.order_number} is now ${updatedOrder.status}!`,
+            'Baking Timeline Update 🥐'
+          );
+        }
+      }
+      previousStatusRef.current = updatedOrder.status;
+
+      setOrder(updatedOrder);
       setError('');
     } catch (err) {
       setError(err.response?.data?.detail || "Order not found");

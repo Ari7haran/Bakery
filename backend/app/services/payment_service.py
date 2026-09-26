@@ -1,6 +1,8 @@
+from typing import Optional
 from app.core.exceptions import BusinessRuleError, ResourceNotFoundError
 from app.models.order import Order, PaymentStatusEnum, PaymentMethodEnum
 from app.repositories.order_repository import OrderRepository
+from app.services.notification_service import NotificationService
 
 # Allowed cash payment representations
 ALLOWED_PAYMENT_METHODS = {
@@ -13,8 +15,9 @@ ALLOWED_PAYMENT_METHODS = {
 }
 
 class PaymentService:
-    def __init__(self, order_repo: OrderRepository):
+    def __init__(self, order_repo: OrderRepository, notification_service: Optional[NotificationService] = None):
         self.order_repo = order_repo
+        self.notification_service = notification_service
 
     def validate_payment_method(self, payment_method: str) -> str:
         """
@@ -56,4 +59,7 @@ class PaymentService:
         if order.payment_status == PaymentStatusEnum.PAID.value:
             return order
 
-        return self.order_repo.update_payment_status(order, PaymentStatusEnum.PAID.value)
+        updated_order = self.order_repo.update_payment_status(order, PaymentStatusEnum.PAID.value)
+        if self.notification_service:
+            self.notification_service.notify_payment_reconciled(updated_order, commit=True)
+        return updated_order

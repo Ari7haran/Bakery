@@ -10,20 +10,32 @@ from app.repositories.product_repository import ProductRepository
 from app.repositories.cart_repository import CartRepository
 from app.repositories.user_repository import UserRepository
 from app.repositories.coupon_repository import CouponRepository
+from app.repositories.notification_repository import NotificationRepository
 from app.services.order_service import OrderService
 from app.services.coupon_service import CouponService
 from app.services.payment_service import PaymentService
+from app.services.notification_service import NotificationService
 from app.schemas.order import OrderCreate, OrderOut
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
-def get_order_service(db: Session = Depends(get_db)) -> OrderService:
+def get_notification_service(db: Session = Depends(get_db)) -> NotificationService:
+    return NotificationService(
+        notification_repo=NotificationRepository(db),
+        user_repo=UserRepository(db),
+        db=db
+    )
+
+def get_order_service(
+    db: Session = Depends(get_db),
+    notif_service: NotificationService = Depends(get_notification_service)
+) -> OrderService:
     order_repo = OrderRepository(db)
     product_repo = ProductRepository(db)
     cart_repo = CartRepository(db)
     user_repo = UserRepository(db)
     coupon_service = CouponService(CouponRepository(db))
-    payment_service = PaymentService(order_repo)
+    payment_service = PaymentService(order_repo, notification_service=notif_service)
     return OrderService(
         order_repo=order_repo,
         product_repo=product_repo,
@@ -31,7 +43,8 @@ def get_order_service(db: Session = Depends(get_db)) -> OrderService:
         user_repo=user_repo,
         coupon_service=coupon_service,
         payment_service=payment_service,
-        db=db
+        db=db,
+        notification_service=notif_service
     )
 
 @router.post("/", response_model=OrderOut)

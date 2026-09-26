@@ -21,6 +21,7 @@ import {
 import { api } from '../services/api.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useToast } from '../context/ToastContext.jsx';
 import ProductCard from '../components/ProductCard.jsx';
 
 const StarPicker = ({ rating, setRating, editable = true, size = "w-5 h-5" }) => {
@@ -59,6 +60,7 @@ const ProductDetailPage = () => {
   const { id } = useParams();
   const { addToCart, toggleWishlist, isInWishlist } = useCart();
   const { user } = useAuth();
+  const toast = useToast();
 
   const [product, setProduct] = useState(null);
   const [recommendations, setRecommendations] = useState([]);
@@ -211,8 +213,9 @@ const ProductDetailPage = () => {
       await api.delete(`/reviews/${reviewId}`);
       await fetchReviews(reviewSort);
       await fetchProduct();
+      toast.success("Review deleted successfully");
     } catch (err) {
-      alert(err.response?.data?.detail || "Failed to delete review.");
+      toast.error(err.response?.data?.detail || "Failed to delete review.");
     } finally {
       setDeletingId(null);
     }

@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { CartProvider } from './context/CartContext.jsx';
 import { ThemeProvider } from './context/ThemeContext.jsx';
+import { ToastProvider } from './context/ToastContext.jsx';
 import Navbar from './components/Navbar.jsx';
 import Footer from './components/Footer.jsx';
 import CartDrawer from './components/CartDrawer.jsx';
@@ -25,9 +26,10 @@ const App = () => {
       <ThemeProvider>
         <AuthProvider>
           <CartProvider>
-            <Router>
-              <div className="min-h-screen flex flex-col justify-between selection:bg-bakery-orange selection:text-white">
-                <Navbar />
+            <ToastProvider>
+              <Router>
+                <div className="min-h-screen flex flex-col justify-between selection:bg-bakery-orange selection:text-white">
+                  <Navbar />
                 
                 <main className="flex-1">
                   <Routes>
@@ -47,7 +49,8 @@ const App = () => {
                 <Footer />
               </div>
             </Router>
-          </CartProvider>
+          </ToastProvider>
+        </CartProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

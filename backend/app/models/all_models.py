@@ -20,6 +20,9 @@ from app.models import (
     Coupon,
     Review,
     Banner,
+    Notification,
+    NotificationTypeEnum,
+    NotificationPriorityEnum,
 )
 
 __all__ = [
@@ -40,4 +43,7 @@ __all__ = [
     "Coupon",
     "Review",
     "Banner",
+    "Notification",
+    "NotificationTypeEnum",
+    "NotificationPriorityEnum",
 ]

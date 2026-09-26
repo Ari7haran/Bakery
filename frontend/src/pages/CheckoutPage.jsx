@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { Clock, CreditCard, QrCode, CheckCircle2 } from 'lucide-react';
 import { useCart } from '../context/CartContext.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useToast } from '../context/ToastContext.jsx';
 import { api } from '../services/api.js';
 import PickupModal from '../components/PickupModal.jsx';
 
 const CheckoutPage = () => {
   const { cart, totalAmount, discountAmount, appliedCoupon, applyCoupon, removeCoupon, pickupSlot, clearCart } = useCart();
   const { user } = useAuth();
+  const toast = useToast();
   const navigate = useNavigate();
 
   const [orderType, setOrderType] = useState('Takeaway Pickup');
@@ -67,9 +69,10 @@ const CheckoutPage = () => {
 
       const res = await api.post('/orders/', payload);
       clearCart();
+      toast.success("Order placed successfully! Check notifications for updates.");
       navigate(`/track?orderId=${res.data.id}`);
     } catch (err) {
-      alert(err.response?.data?.detail || "Failed to place order. Please try again.");
+      toast.error(err.response?.data?.detail || "Failed to place order. Please try again.");
     } finally {
       setLoading(false);
     }

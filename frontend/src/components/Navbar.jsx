@@ -13,12 +13,15 @@ import {
   X,
   LogOut,
   Sparkles,
-  LayoutDashboard
+  LayoutDashboard,
+  Bell
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import { useTheme } from '../context/ThemeContext.jsx';
 import PickupModal from './PickupModal.jsx';
+import NotificationDropdown from './NotificationDropdown.jsx';
+import { notificationService } from '../services/notificationService.js';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -28,9 +31,31 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
-  
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    if (!user) {
+      setUnreadCount(0);
+      return;
+    }
+
+    const fetchUnread = async () => {
+      try {
+        const data = await notificationService.getUnreadCount();
+        setUnreadCount(data.unread_count || 0);
+      } catch (err) {
+        // Silent fail for polling
+      }
+    };
+
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -152,6 +177,39 @@ const Navbar = () => {
                 </span>
               )}
             </Link>
+
+            {/* Notifications Bell & Dropdown */}
+            {user && (
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    setIsNotificationOpen(!isNotificationOpen);
+                    setIsUserMenuOpen(false);
+                  }}
+                  className={`relative p-2 rounded-full transition ${
+                    isNotificationOpen
+                      ? 'bg-amber-100 dark:bg-amber-900/60 text-bakery-orange'
+                      : 'hover:bg-amber-950/10 dark:hover:bg-cream-100/10 text-bakery-dark dark:text-cream-100'
+                  }`}
+                  title="Notifications"
+                  aria-label="View Notifications"
+                >
+                  <Bell className="w-5 h-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 bg-bakery-orange text-white rounded-full text-[10px] font-extrabold flex items-center justify-center shadow-sm animate-pulse">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                <NotificationDropdown
+                  isOpen={isNotificationOpen}
+                  onClose={() => setIsNotificationOpen(false)}
+                  user={user}
+                  onUnreadCountChange={(newCount) => setUnreadCount(newCount)}
+                />
+              </div>
+            )}
 
             {/* Cart Drawer Trigger */}
             <button
@@ -279,6 +337,23 @@ const Navbar = () => {
             >
               Track Order
             </Link>
+            {user && (
+              <Link
+                to="/profile?tab=notifications"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center justify-between font-medium hover:text-bakery-orange"
+              >
+                <span className="flex items-center gap-2">
+                  <Bell className="w-4 h-4 text-bakery-orange" />
+                  Notifications
+                </span>
+                {unreadCount > 0 && (
+                  <span className="bg-bakery-orange text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    {unreadCount}
+                  </span>
+                )}
+              </Link>
+            )}
             {!user && (
               <Link
                 to="/login"

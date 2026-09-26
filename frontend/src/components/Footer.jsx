@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, Clock, Instagram, Facebook, Twitter, Send, Award, ShieldCheck } from 'lucide-react';
+import { useToast } from '../context/ToastContext.jsx';
 
 const Footer = () => {
+  const toast = useToast();
   return (
     <footer className="bg-bakery-dark text-cream-100 border-t border-amber-900/30 pt-16 pb-8 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -81,7 +83,7 @@ const Footer = () => {
             <p className="text-xs text-amber-200/70 mb-3">
               Subscribe to get secret weekend discount codes & birthday cake offers!
             </p>
-            <form onSubmit={(e) => { e.preventDefault(); alert("Thank you for subscribing to Sweet Crumbs!"); }} className="space-y-2">
+            <form onSubmit={(e) => { e.preventDefault(); toast.success("Thank you for subscribing to Sweet Crumbs!"); }} className="space-y-2">
               <div className="relative">
                 <input
                   type="email"

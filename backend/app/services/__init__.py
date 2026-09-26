@@ -6,6 +6,7 @@ from app.services.payment_service import PaymentService
 from app.services.order_service import OrderService
 from app.services.admin_service import AdminService
 from app.services.review_service import ReviewService
+from app.services.notification_service import NotificationService
 
 __all__ = [
     "AuthService",
@@ -16,4 +17,5 @@ __all__ = [
     "OrderService",
     "AdminService",
     "ReviewService",
+    "NotificationService",
 ]

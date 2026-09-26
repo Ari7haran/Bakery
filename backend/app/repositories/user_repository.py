@@ -33,3 +33,6 @@ class UserRepository(BaseRepository[User]):
         self.db.commit()
         self.db.refresh(user)
         return user
+
+    def get_admins(self) -> List[User]:
+        return self.db.query(User).filter(User.role == "admin", User.is_active == True).all()

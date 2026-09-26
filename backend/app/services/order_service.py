@@ -6,6 +6,8 @@ from app.repositories.cart_repository import CartRepository
 from app.repositories.user_repository import UserRepository
 from app.services.coupon_service import CouponService
 from app.services.payment_service import PaymentService
+from app.repositories.notification_repository import NotificationRepository
+from app.services.notification_service import NotificationService
 from app.core.exceptions import ResourceNotFoundError, BusinessRuleError, ForbiddenError
 from app.models.order import Order, OrderItem, OrderStatusEnum, PaymentStatusEnum, OrderTypeEnum, PaymentMethodEnum
 from app.models.user import User
@@ -36,7 +38,8 @@ class OrderService:
         user_repo: UserRepository,
         coupon_service: CouponService,
         payment_service: PaymentService,
-        db: Session
+        db: Session,
+        notification_service: Optional[NotificationService] = None
     ):
         self.order_repo = order_repo
         self.product_repo = product_repo
@@ -45,6 +48,10 @@ class OrderService:
         self.coupon_service = coupon_service
         self.payment_service = payment_service
         self.db = db
+        if notification_service is not None:
+            self.notification_service = notification_service
+        else:
+            self.notification_service = NotificationService(NotificationRepository(db), user_repo, db)
 
     def create_order(self, current_user: User, order_in: OrderCreate) -> Order:
         # 1. Validate order type
@@ -234,6 +241,15 @@ class OrderService:
 
             self.db.commit()
             self.db.refresh(new_order)
+
+            # Emit business event notifications (order confirmation & low-stock check)
+            if self.notification_service:
+                self.notification_service.notify_order_created(new_order, commit=True)
+                for item in order_items_data:
+                    prod = item["product"]
+                    if prod.stock_quantity <= 5:
+                        self.notification_service.notify_low_stock(prod, threshold=5, commit=True)
+
             return new_order
         except Exception as e:
             self.db.rollback()
@@ -296,6 +312,10 @@ class OrderService:
 
             self.db.commit()
             self.db.refresh(order)
+
+            if self.notification_service:
+                self.notification_service.notify_order_cancelled(order, commit=True)
+
             return order
         except Exception:
             self.db.rollback()
@@ -306,6 +326,7 @@ class OrderService:
         if not order:
             raise ResourceNotFoundError("Order not found")
 
+        old_status = order.status
         allowed_next = ALLOWED_STATUS_TRANSITIONS.get(order.status, set())
         if new_status not in allowed_next and new_status != order.status:
             raise BusinessRuleError(
@@ -322,4 +343,8 @@ class OrderService:
 
         self.db.commit()
         self.db.refresh(order)
+
+        if self.notification_service and old_status != new_status:
+            self.notification_service.notify_order_status_update(order, old_status, new_status, commit=True)
+
         return order

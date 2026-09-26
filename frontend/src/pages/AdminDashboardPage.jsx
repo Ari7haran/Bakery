@@ -13,11 +13,13 @@ import {
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
 import { api } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useToast } from '../context/ToastContext.jsx';
 
 const COLORS = ['#8B4513', '#E07A5F', '#D4AF37', '#2C1810', '#3D1C10'];
 
 const AdminDashboardPage = () => {
   const { user } = useAuth();
+  const toast = useToast();
   const navigate = useNavigate();
 
   const [analytics, setAnalytics] = useState(null);
@@ -86,8 +88,9 @@ const AdminDashboardPage = () => {
     try {
       const res = await api.put(`/admin/orders/${orderId}/status`, { status });
       setOrders(orders.map(o => o.id === orderId ? res.data : o));
+      toast.success(`Order status updated to ${status}`);
     } catch (err) {
-      alert(err.response?.data?.detail || "Failed to update order status");
+      toast.error(err.response?.data?.detail || "Failed to update order status");
     }
   };
 
@@ -95,8 +98,9 @@ const AdminDashboardPage = () => {
     try {
       const res = await api.put(`/admin/orders/${orderId}/payment`);
       setOrders(orders.map(o => o.id === orderId ? res.data : o));
+      toast.success("Order payment marked as Paid");
     } catch (err) {
-      alert(err.response?.data?.detail || "Failed to mark order as paid");
+      toast.error(err.response?.data?.detail || "Failed to mark order as paid");
     }
   };
 
@@ -123,9 +127,9 @@ const AdminDashboardPage = () => {
       setNewProdName('');
       setNewProdDesc('');
       setNewProdStock(25);
-      alert("Product created successfully!");
+      toast.success("Product created successfully!");
     } catch {
-      alert("Failed to create product.");
+      toast.error("Failed to create product.");
     }
   };
 
@@ -162,9 +166,9 @@ const AdminDashboardPage = () => {
       setProducts(products.map(p => p.id === editingProduct.id ? res.data : p));
       setIsEditModalOpen(false);
       setEditingProduct(null);
-      alert("Product updated successfully!");
+      toast.success("Product updated successfully!");
     } catch (err) {
-      alert(err.response?.data?.detail || "Failed to update product.");
+      toast.error(err.response?.data?.detail || "Failed to update product.");
     }
   };
 
@@ -173,8 +177,9 @@ const AdminDashboardPage = () => {
     try {
       await api.delete(`/admin/products/${prodId}`);
       setProducts(products.filter(p => p.id !== prodId));
+      toast.success("Product deleted successfully");
     } catch {
-      alert("Failed to delete product.");
+      toast.error("Failed to delete product.");
     }
   };
 
